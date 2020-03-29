@@ -1,3 +1,7 @@
 # ffmpeg git ignore file
 
 *.DS_Store
+*.vscode
+ffmpeg_android/
+ffmpeg_tmp/
+ffmpeg-*
