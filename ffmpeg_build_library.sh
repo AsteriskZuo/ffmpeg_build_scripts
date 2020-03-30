@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source ./color_log.sh
+
 echo "###############################################################################"
 echo "# Script Summary:                                                             #"
 echo "# Author:                  yu.zuo                                             #"
@@ -161,6 +163,7 @@ echo "##########################################################################
 function ffmpeg_test() {
     # special test function by man test commandline
     # $ man test
+    echo "ffmpeg_test start..."
     if test 1 -eq 1; then
         echo "1 -eq 1"
     elif test 1 -eq 2; then
@@ -231,6 +234,7 @@ function ffmpeg_test() {
     #     echo "ANDROID_API=$ANDROID_API is error."
     #     exit 1
     # fi
+    echo "ffmpeg_test end..."
 }
 
 function ffmpeg_for_test() {
@@ -277,63 +281,63 @@ function ffmpeg_output_log_control_test() {
 
 function ffmpeg_clean() {
     # clean tmp and output dir
-    echo "ffmpeg_clean start..."
+    log_info_print "ffmpeg_clean start..."
     if test -d $FFMPEG_TMP_DIR; then
         rm -rf $FFMPEG_TMP_DIR
     fi
-    echo "ffmpeg_clean end..."
+    log_info_print "ffmpeg_clean end..."
 }
 
 function ffmpeg_mkdir() {
     # make directory
-    echo "ffmpeg_mkdir start..."
+    log_info_print "ffmpeg_mkdir start..."
     if test ! -d $FFMPEG_TMP_DIR; then
         mkdir -p $FFMPEG_TMP_DIR
     fi
-    echo "ffmpeg_mkdir end..."
+    log_info_print "ffmpeg_mkdir end..."
 }
 
 function ffmpeg_prerequisites_ios() {
-    echo "ffmpeg_prerequisites_ios start..."
+    log_info_print "ffmpeg_prerequisites_ios start..."
 
     if [ ! $(which yasm) ]; then
-        echo 'Yasm not found'
+        log_warning_print 'Yasm not found'
         if [ ! $(which brew) ]; then
-            echo 'Homebrew not found. Trying to install...'
-            echo "download url: https://raw.githubusercontent.com/Homebrew/install/master/install"
+            log_warning_print 'Homebrew not found. Trying to install...'
+            log_debug_print "download url: https://raw.githubusercontent.com/Homebrew/install/master/install"
             ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" ||
                 exit 1
         fi
-        echo 'Trying to install Yasm...'
+        log_debug_print 'Trying to install Yasm...'
         brew install yasm || exit 1
     fi
 
     if [ ! $(which gas-preprocessor.pl) ]; then
         echo 'gas-preprocessor.pl not found. Trying to install...'
-        echo "download url: https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl"
+        log_debug_print "download url: https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl"
         (curl -L https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl \
             -o /usr/local/bin/gas-preprocessor.pl &&
             chmod +x /usr/local/bin/gas-preprocessor.pl) ||
             exit 1
     fi
 
-    echo "ffmpeg_prerequisites_ios end..."
+    log_info_print "ffmpeg_prerequisites_ios end..."
 }
 
 function ffmpeg_prerequisites_android() {
-    echo "ffmpeg_prerequisites_android start..."
+    log_info_print "ffmpeg_prerequisites_android start..."
 
     if [ "yes" = $ANDROID_ENABLE_STANDALONE_TOOLCHAIN ]; then
 
         ANDROID_TOOLCHAIN_DIR=$FFMPEG_ROOT_DIR/ffmpeg_android
-        echo "ANDROID_TOOLCHAIN_DIR=$ANDROID_TOOLCHAIN_DIR"
+        log_debug_print "ANDROID_TOOLCHAIN_DIR=$ANDROID_TOOLCHAIN_DIR"
 
         if [ ! -d ${ANDROID_TOOLCHAIN_DIR} ]; then
             mkdir -p $ANDROID_TOOLCHAIN_DIR
         fi
 
         for MARCH in ${ANDROID_MARCHS[@]}; do
-            echo "MARCH=$MARCH"
+            log_debug_print "MARCH=$MARCH"
             if [ ! -d ${ANDROID_TOOLCHAIN_DIR}/${MARCH} ]; then
                 python ${ANDROID_NDK_DIR}/build/tools/make_standalone_toolchain.py \
                     --arch ${MARCH} \
@@ -349,59 +353,59 @@ function ffmpeg_prerequisites_android() {
 
     fi
 
-    echo "ffmpeg_prerequisites_android end..."
+    log_info_print "ffmpeg_prerequisites_android end..."
 }
 
 function ffmpeg_download_src() {
-    echo "ffmpeg_download_src start..."
+    log_info_print "ffmpeg_download_src start..."
 
     if [ ! -r $FFMPEG_FULL_NAME ]; then
-        echo 'FFmpeg source file not found. Trying to download...'
-        echo "download url: http://www.ffmpeg.org/releases/$FFMPEG_FULL_NAME.tar.bz2"
+        log_warning_print 'FFmpeg source file not found. Trying to download...'
+        log_debug_print "download url: http://www.ffmpeg.org/releases/$FFMPEG_FULL_NAME.tar.bz2"
         curl http://www.ffmpeg.org/releases/${FFMPEG_FULL_NAME}.tar.bz2 >${FFMPEG_FULL_NAME}.tar.bz2 || exit 1
         tar -x -f ${FFMPEG_FULL_NAME}.tar.bz2 || exit 1
     fi
 
-    echo "ffmpeg_download_src end..."
+    log_info_print "ffmpeg_download_src end..."
 }
 
 function ffmpeg_prerequisites() {
     # download dependence softwares
     # update prerequisite variable
-    echo "ffmpeg_prerequisites start..."
+    log_info_print "ffmpeg_prerequisites start..."
 
     ffmpeg_download_src
     ffmpeg_prerequisites_ios
     ffmpeg_prerequisites_android
 
-    echo "ffmpeg_prerequisites end..."
+    log_info_print "ffmpeg_prerequisites end..."
 }
 
 function ffmpeg_lipo_iOS() {
-    echo "ffmpeg_lipo_iOS start..."
-    echo "ffmpeg_lipo_iOS param_count=" $# "param_content=" $@
+    log_info_print "ffmpeg_lipo_iOS start..."
+    log_info_print "ffmpeg_lipo_iOS param_count=" $# "param_content=" $@
 
     FROM_LIBRARY_DIR=${FFMPEG_TMP_OS_OUTPUT_DIR}
     TO_LIBRARY_DIR=${FFMPEG_TMP_OS_LIPO_DIR}
 
-    echo "FROM_LIBRARY_DIR=$FROM_LIBRARY_DIR"
-    echo "TO_LIBRARY_DIR=$TO_LIBRARY_DIR"
+    log_debug_print "FROM_LIBRARY_DIR=$FROM_LIBRARY_DIR"
+    log_debug_print "TO_LIBRARY_DIR=$TO_LIBRARY_DIR"
 
     LIBRARY_LIST=$(find ${FROM_LIBRARY_DIR}/${FFMPEG_ALL_ARCH_ON_IOS[0]} -name "*.a" | sed "s/^.*\///g")
 
-    echo "LIBRARY_LIST=${LIBRARY_LIST[@]}"
+    log_debug_print "LIBRARY_LIST=${LIBRARY_LIST[@]}"
 
     for LIBRARY_FILE in ${LIBRARY_LIST[@]}; do
-        echo "LIBRARY_FILE=$LIBRARY_FILE"
+        log_debug_print "LIBRARY_FILE=$LIBRARY_FILE"
         lipo -create $(find $FROM_LIBRARY_DIR -name $LIBRARY_FILE) -output $TO_LIBRARY_DIR/$LIBRARY_FILE || exit 1
     done
 
-    echo "ffmpeg_lipo_iOS end..."
+    log_info_print "ffmpeg_lipo_iOS end..."
 }
 
 function ffmpeg_build_iOS() {
-    echo "ffmpeg_build_iOS start..."
-    echo "ffmpeg_build_iOS params_count="$# "params_content="$@
+    log_info_print "ffmpeg_build_iOS start..."
+    log_info_print "ffmpeg_build_iOS params_count="$# "params_content="$@
 
     DEPLOYMENT_MIN_TARGET="8.0"
     DEVICE_TYPE=""
@@ -465,28 +469,28 @@ function ffmpeg_build_iOS() {
     # CONFIGURE_PARAMS_LD="ld"
     CONFIGURE_PARAMS_SYSROOT=$(xcrun -sdk ${DEVICE_TYPE} --show-sdk-path)
 
-    echo "DEPLOYMENT_MIN_TARGET=${DEPLOYMENT_MIN_TARGET}"
-    echo "DEVICE_TYPE=${DEVICE_TYPE}"
+    log_debug_print "DEPLOYMENT_MIN_TARGET=${DEPLOYMENT_MIN_TARGET}"
+    log_debug_print "DEVICE_TYPE=${DEVICE_TYPE}"
 
-    echo "CFLAGS=${CFLAGS}"
-    echo "CXXFLAGS=${CXXFLAGS}"
-    echo "LDFLAGS=${LDFLAGS}"
-    echo "AS=${AS}"
-    echo "CC=${CC}"
+    log_debug_print "CFLAGS=${CFLAGS}"
+    log_debug_print "CXXFLAGS=${CXXFLAGS}"
+    log_debug_print "LDFLAGS=${LDFLAGS}"
+    log_debug_print "AS=${AS}"
+    log_debug_print "CC=${CC}"
 
-    echo "TMP_DIR=$TMP_DIR"
-    echo "OUTPUT_DIR=$OUTPUT_DIR"
-    echo "PLATFORM_TRAIT=$PLATFORM_TRAIT"
+    log_debug_print "TMP_DIR=$TMP_DIR"
+    log_debug_print "OUTPUT_DIR=$OUTPUT_DIR"
+    log_debug_print "PLATFORM_TRAIT=$PLATFORM_TRAIT"
 
-    echo "CONFIGURE_PARAMS_PREFIX=${CONFIGURE_PARAMS_PREFIX}"
-    echo "CONFIGURE_PARAMS_SYSROOT=${CONFIGURE_PARAMS_SYSROOT}"
-    echo "CONFIGURE_PARAMS_TARGET_OS=${CONFIGURE_PARAMS_TARGET_OS}"
-    echo "CONFIGURE_PARAMS_AR=${CONFIGURE_PARAMS_AR}"
-    echo "CONFIGURE_PARAMS_AS=${CONFIGURE_PARAMS_AS}"
-    echo "CONFIGURE_PARAMS_CC=${CONFIGURE_PARAMS_CC}"
-    echo "CONFIGURE_PARAMS_CXX=${CONFIGURE_PARAMS_CXX}"
-    echo "CONFIGURE_PARAMS_LD=${CONFIGURE_PARAMS_LD}"
-    echo "CONFIGURE_PARAMS_PKG_CONFIG=${CONFIGURE_PARAMS_PKG_CONFIG}"
+    log_debug_print "CONFIGURE_PARAMS_PREFIX=${CONFIGURE_PARAMS_PREFIX}"
+    log_debug_print "CONFIGURE_PARAMS_SYSROOT=${CONFIGURE_PARAMS_SYSROOT}"
+    log_debug_print "CONFIGURE_PARAMS_TARGET_OS=${CONFIGURE_PARAMS_TARGET_OS}"
+    log_debug_print "CONFIGURE_PARAMS_AR=${CONFIGURE_PARAMS_AR}"
+    log_debug_print "CONFIGURE_PARAMS_AS=${CONFIGURE_PARAMS_AS}"
+    log_debug_print "CONFIGURE_PARAMS_CC=${CONFIGURE_PARAMS_CC}"
+    log_debug_print "CONFIGURE_PARAMS_CXX=${CONFIGURE_PARAMS_CXX}"
+    log_debug_print "CONFIGURE_PARAMS_LD=${CONFIGURE_PARAMS_LD}"
+    log_debug_print "CONFIGURE_PARAMS_PKG_CONFIG=${CONFIGURE_PARAMS_PKG_CONFIG}"
 
     # Toolchain options:
     # CONFIGURE_PARAMS="--enable-cross-compile"
@@ -513,7 +517,7 @@ function ffmpeg_build_iOS() {
     # sh -x "./configure" ${CONFIGURE_PARAMS}
 
     CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
-    echo "CONFIGURE_FILE=$CONFIGURE_FILE"
+    log_debug_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     pushd .
 
@@ -557,12 +561,12 @@ function ffmpeg_build_iOS() {
 
     popd
 
-    echo "ffmpeg_build_iOS end..."
+    log_info_print "ffmpeg_build_iOS end..."
 }
 
 function ffmpeg_build_Android() {
-    echo "ffmpeg_build_Android start..."
-    echo "ffmpeg_build_Android params_count="$# "params_content="$@
+    log_info_print "ffmpeg_build_Android start..."
+    log_info_print "ffmpeg_build_Android params_count="$# "params_content="$@
 
     CURRENT_ARCH_FLAGS=""
     CURRENT_ARCH_LINK=""
@@ -625,7 +629,7 @@ function ffmpeg_build_Android() {
         CURRENT_ARCH="x86_64"
         PLATFORM_TRAIT=${PLATFORM_TRAIT}" --disable-programs"
     else
-        echo "FFMPEG_CURRENT_ARCH=$FFMPEG_CURRENT_ARCH is error."
+        log_error_print "FFMPEG_CURRENT_ARCH=$FFMPEG_CURRENT_ARCH is error."
         exit 1
     fi
 
@@ -679,41 +683,41 @@ function ffmpeg_build_Android() {
     CONFIGURE_PARAMS_TARGET_OS="android"
     CONFIGURE_PARAMS_SYSROOT=""
 
-    echo "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
-    echo "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
+    log_debug_print "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
+    log_debug_print "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
 
-    echo "ANDROID_CURRENT_TRIPLE=$ANDROID_CURRENT_TRIPLE"
-    echo "ANDROID_CURRENT_ABI=$ANDROID_CURRENT_ABI"
-    echo "ANDROID_CURRENT_MARCH=$ANDROID_CURRENT_MARCH"
+    log_debug_print "ANDROID_CURRENT_TRIPLE=$ANDROID_CURRENT_TRIPLE"
+    log_debug_print "ANDROID_CURRENT_ABI=$ANDROID_CURRENT_ABI"
+    log_debug_print "ANDROID_CURRENT_MARCH=$ANDROID_CURRENT_MARCH"
 
-    echo "CURRENT_ARCH=$CURRENT_ARCH"
-    echo "CURRENT_TRIPLE_armv7a=$CURRENT_TRIPLE_armv7a"
-    echo "CURRENT_CPU=$CURRENT_CPU"
+    log_debug_print "CURRENT_ARCH=$CURRENT_ARCH"
+    log_debug_print "CURRENT_TRIPLE_armv7a=$CURRENT_TRIPLE_armv7a"
+    log_debug_print "CURRENT_CPU=$CURRENT_CPU"
 
-    echo "export AR=$AR"
-    echo "export AS=$AS"
-    echo "export CC=$CC"
-    echo "export CXX=$CXX"
-    echo "export LD=$LD"
-    echo "export STRIP=$STRIP"
-    echo "export CFLAGS=$CFLAGS"
-    echo "export CXXFLAGS=$CXXFLAGS"
-    echo "export LDFLAGS=$LDFLAGS"
-    echo "export RANLIB=$RANLIB"
-    echo "export NM=$NM"
+    log_debug_print "export AR=$AR"
+    log_debug_print "export AS=$AS"
+    log_debug_print "export CC=$CC"
+    log_debug_print "export CXX=$CXX"
+    log_debug_print "export LD=$LD"
+    log_debug_print "export STRIP=$STRIP"
+    log_debug_print "export CFLAGS=$CFLAGS"
+    log_debug_print "export CXXFLAGS=$CXXFLAGS"
+    log_debug_print "export LDFLAGS=$LDFLAGS"
+    log_debug_print "export RANLIB=$RANLIB"
+    log_debug_print "export NM=$NM"
 
-    echo "TMP_DIR=$TMP_DIR"
-    echo "OUTPUT_DIR=$OUTPUT_DIR"
-    echo "CONFIGURE_PARAMS_PREFIX=$CONFIGURE_PARAMS_PREFIX"
+    log_debug_print "TMP_DIR=$TMP_DIR"
+    log_debug_print "OUTPUT_DIR=$OUTPUT_DIR"
+    log_debug_print "CONFIGURE_PARAMS_PREFIX=$CONFIGURE_PARAMS_PREFIX"
 
-    echo "CONFIGURE_PARAMS_TARGET_OS=$CONFIGURE_PARAMS_TARGET_OS"
-    echo "CONFIGURE_PARAMS_SYSROOT=$CONFIGURE_PARAMS_SYSROOT"
+    log_debug_print "CONFIGURE_PARAMS_TARGET_OS=$CONFIGURE_PARAMS_TARGET_OS"
+    log_debug_print "CONFIGURE_PARAMS_SYSROOT=$CONFIGURE_PARAMS_SYSROOT"
 
-    echo "PKG_CONFIG=$PKG_CONFIG"
-    echo "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
+    log_debug_print "PKG_CONFIG=$PKG_CONFIG"
+    log_debug_print "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
 
     CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
-    echo "CONFIGURE_FILE=$CONFIGURE_FILE"
+    log_debug_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     pushd .
 
@@ -758,11 +762,11 @@ function ffmpeg_build_Android() {
 
     popd
 
-    echo "ffmpeg_build_Android end..."
+    log_info_print "ffmpeg_build_Android end..."
 }
 
 function ffmpeg_build_all() {
-    echo "ffmpeg_build_all start..."
+    log_info_print "ffmpeg_build_all start..."
 
     for ((i = 0; i < ${#FFMPEG_ALL_TARGET_OS[@]}; i++)); do
 
@@ -772,11 +776,11 @@ function ffmpeg_build_all() {
         FFMPEG_TMP_OS_TMP_DIR="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/tmp"
         FFMPEG_TMP_OS_LIPO_DIR="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/lipo"
 
-        echo "FFMPEG_CURRENT_TARGET_OS=${FFMPEG_CURRENT_TARGET_OS}"
-        echo "FFMPEG_TMP_OS_LOG_DIR=${FFMPEG_TMP_OS_LOG_DIR}"
-        echo "FFMPEG_TMP_OS_OUTPUT_DIR=${FFMPEG_TMP_OS_OUTPUT_DIR}"
-        echo "FFMPEG_TMP_OS_TMP_DIR=${FFMPEG_TMP_OS_TMP_DIR}"
-        echo "FFMPEG_TMP_OS_LIPO_DIR=${FFMPEG_TMP_OS_LIPO_DIR}"
+        log_debug_print "FFMPEG_CURRENT_TARGET_OS=${FFMPEG_CURRENT_TARGET_OS}"
+        log_debug_print "FFMPEG_TMP_OS_LOG_DIR=${FFMPEG_TMP_OS_LOG_DIR}"
+        log_debug_print "FFMPEG_TMP_OS_OUTPUT_DIR=${FFMPEG_TMP_OS_OUTPUT_DIR}"
+        log_debug_print "FFMPEG_TMP_OS_TMP_DIR=${FFMPEG_TMP_OS_TMP_DIR}"
+        log_debug_print "FFMPEG_TMP_OS_LIPO_DIR=${FFMPEG_TMP_OS_LIPO_DIR}"
 
         mkdir -p ${FFMPEG_TMP_OS_LOG_DIR}
         mkdir -p ${FFMPEG_TMP_OS_OUTPUT_DIR}
@@ -784,7 +788,7 @@ function ffmpeg_build_all() {
         mkdir -p ${FFMPEG_TMP_OS_LIPO_DIR}
 
         if [ "iOS" = $FFMPEG_CURRENT_TARGET_OS ]; then
-            echo "ffmpeg_build_all iOS start..."
+            log_info_print "ffmpeg_build_all iOS start..."
 
             for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_IOS[@]}; j++)); do
 
@@ -793,8 +797,8 @@ function ffmpeg_build_all() {
 
                 ffmpeg_output_log_control
 
-                echo "FFMPEG_CURRENT_ARCH=${FFMPEG_CURRENT_ARCH}"
-                echo "FFMPEG_LOG=$FFMPEG_LOG"
+                log_debug_print "FFMPEG_CURRENT_ARCH=${FFMPEG_CURRENT_ARCH}"
+                log_debug_print "FFMPEG_LOG=$FFMPEG_LOG"
 
                 mkdir -p "${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
                 mkdir -p "${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
@@ -805,18 +809,18 @@ function ffmpeg_build_all() {
 
             ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS}
 
-            echo "ffmpeg_build_all iOS end..."
+            log_info_print "ffmpeg_build_all iOS end..."
         elif [ "Android" = $FFMPEG_CURRENT_TARGET_OS ]; then
-            echo "ffmpeg_build_all Android start..."
+            log_info_print "ffmpeg_build_all Android start..."
 
             if [ $ANDROID_API -le 19 ]; then
-                echo "ANDROID_API=$ANDROID_API is not support."
+                log_error_print "ANDROID_API=$ANDROID_API is not support."
                 exit 1
             elif [ $ANDROID_MAX_API -lt $ANDROID_API ]; then
-                echo "ANDROID_API=$ANDROID_API is not support."
+                log_error_print "ANDROID_API=$ANDROID_API is not support."
                 exit 1
             else
-                echo "ANDROID_API is OK"
+                log_debug_print "ANDROID_API is OK"
             fi
 
             for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_ANDROID[@]}; j++)); do
@@ -826,8 +830,8 @@ function ffmpeg_build_all() {
 
                 ffmpeg_output_log_control
 
-                echo "FFMPEG_CURRENT_ARCH=${FFMPEG_CURRENT_ARCH}"
-                echo "FFMPEG_LOG=$FFMPEG_LOG"
+                log_debug_print "FFMPEG_CURRENT_ARCH=${FFMPEG_CURRENT_ARCH}"
+                log_debug_print "FFMPEG_LOG=$FFMPEG_LOG"
 
                 mkdir -p "${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
                 mkdir -p "${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
@@ -836,12 +840,12 @@ function ffmpeg_build_all() {
 
             done
 
-            echo "ffmpeg_build_all Android end..."
+            log_info_print "ffmpeg_build_all Android end..."
         fi
 
     done
 
-    echo "ffmpeg_build_all end..."
+    log_info_print "ffmpeg_build_all end..."
 }
 
 echo "###############################################################################"
