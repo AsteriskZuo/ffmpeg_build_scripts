@@ -20,14 +20,15 @@ Build library for iOS and Android on macOS
 8. curl for iOS and Android, which can be installed using brew         
 9. tar for iOS and Android, which can be installed using brew    
 ## Reference
-Url: http://yasm.tortall.net/                                      
-Url: https://developer.android.com/ndk/guides/cmake                
-Url: https://developer.android.com/ndk/guides/abis                 
-Url: https://developer.android.com/ndk/guides/other_build_systems  
-Url: https://developer.android.com/ndk/guides/standalone_toolchain 
-Url: https://gcc.gnu.org/onlinedocs/gcc/index.html                 
-Url: https://llvm.org/docs/genindex.html                           
-Url: https://blog.csdn.net/taiyang1987912/article/details/39551385 
-Url: https://github.com/libav/gas-preprocessor                     
-Url: https://github.com/nldzsz/ffmpeg-build-scripts                
-Url: https://github.com/kewlbear/FFmpeg-iOS-build-script           
+Url: http://yasm.tortall.net/    
+Url: https://developer.android.com/ndk/guides/cmake    
+Url: https://developer.android.com/ndk/guides/abis    
+Url: https://developer.android.com/ndk/guides/other_build_systems    
+Url: https://developer.android.com/ndk/guides/standalone_toolchain    
+Url: https://gcc.gnu.org/onlinedocs/gcc/index.html     
+Url: https://llvm.org/docs/genindex.html    
+Url: https://blog.csdn.net/taiyang1987912/article/details/39551385     
+Url: https://github.com/libav/gas-preprocessor              
+Url: https://github.com/nldzsz/ffmpeg-build-scripts            
+Url: https://github.com/kewlbear/FFmpeg-iOS-build-script         
+
