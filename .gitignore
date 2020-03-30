@@ -3,5 +3,5 @@
 *.DS_Store
 *.vscode
 ffmpeg_android/
-ffmpeg_tmp/
+ffmpeg_tmp*/
 ffmpeg-*

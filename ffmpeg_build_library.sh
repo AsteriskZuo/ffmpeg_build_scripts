@@ -112,7 +112,7 @@ echo "##########################################################################
 echo "#### Variable declarations partition on Android                           #####"
 echo "###############################################################################"
 
-ANDROID_NDK_DIR="/Users/asteriskzuo/Library/Android/sdk/ndk-bundle"
+ANDROID_NDK_DIR="/Users/zuoyu/Library/Android/sdk/ndk-bundle"
 ANDROID_HOST_TAG="darwin-x86_64"
 ANDROID_TOOLCHAIN_DIR="$ANDROID_NDK_DIR/toolchains/llvm/prebuilt/$ANDROID_HOST_TAG"
 ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
@@ -799,11 +799,11 @@ function ffmpeg_build_all() {
                 mkdir -p "${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
                 mkdir -p "${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
 
-                # ffmpeg_build_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH}
+                ffmpeg_build_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH}
 
             done
 
-            # ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS}
+            ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS}
 
             echo "ffmpeg_build_all iOS end..."
         elif [ "Android" = $FFMPEG_CURRENT_TARGET_OS ]; then
