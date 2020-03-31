@@ -97,6 +97,13 @@ echo "##########################################################################
 
 # log_xxx_print function is very easily replaced by echo command-line
 
+function log_test() {
+    x=100
+    ptrx=x
+    eval $ptrx=50
+    echo $x
+}
+
 function log_test_sed() {
     params=("1 2 3" "4 5")
     echo ${#params[@]}
