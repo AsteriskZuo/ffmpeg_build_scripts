@@ -18,6 +18,7 @@ echo "# Url: https://www.centos.bz/2013/07/linux-shell-c-show-color-word/       
 echo "# Url: https://blog.csdn.net/Jerry_1126/article/details/80628359              #" >/dev/null
 echo "# Url: https://blog.csdn.net/neo949332116/article/details/100181500           #" >/dev/null
 echo "# Url: https://blog.csdn.net/taiyang1987912/article/details/39551385          #" >/dev/null
+echo "# Url: https://www.cnblogs.com/hurryup/articles/10241601.html                 #" >/dev/null
 echo "###############################################################################" >/dev/null
 
 echo "# 基本语法介绍:
@@ -98,10 +99,28 @@ echo "##########################################################################
 # log_xxx_print function is very easily replaced by echo command-line
 
 function log_test() {
-    x=100
+    local x=100
     ptrx=x
     eval $ptrx=50
     echo $x
+
+    y=100
+    ptry=$y
+    eval $ptry=50
+    echo $y
+
+    a=100
+    ptra=a
+    $ptra=50
+    echo $a
+
+    b=100
+    ptrb=b
+    $ptrb=50
+    echo $b
+
+    eval $ptrc=50
+    echo $ptrc
 }
 
 function log_test_sed() {
@@ -154,8 +173,9 @@ function log_var_split_print() {
     # Multiple Spaces merge into one space.
     FOREGROUND=$LOG_VAR_FG_SKY_BLUE
     FONT=$LOG_VAR_BLINK
-    KEY=($(echo $@ | sed "s/\\=.*$//g"))
-    VALUE=$(echo $@ | sed "s/^.*\\=//g")
+    KEY=$(echo $@ | sed "s/\\=.*$//g")
+    # VALUE=$(echo $@ | sed "s/^.*\\=//g")
+    VALUE=${@#*=}
     echo "\\033[${FOREGROUND};${FONT}m${KEY} \\033[${LOG_VAR_FG_YELLOW}m= \\033[${FOREGROUND}m${VALUE}\\033[0m"
 }
 function log_debug_print() {

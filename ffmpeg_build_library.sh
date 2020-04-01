@@ -31,6 +31,8 @@ log_head_print "# Url: https://developer.android.com/ndk/guides/other_build_syst
 log_head_print "# Url: https://developer.android.com/ndk/guides/standalone_toolchain          #"
 log_head_print "# Url: https://gcc.gnu.org/onlinedocs/gcc/index.html                          #"
 log_head_print "# Url: https://llvm.org/docs/genindex.html                                    #"
+log_head_print "# Url: https://clang.llvm.org/                                                #"
+log_head_print "# Url: https://releases.llvm.org/10.0.0/tools/clang/docs/index.html           #"
 log_head_print "# Url: https://github.com/libav/gas-preprocessor                              #"
 log_head_print "# Url: https://github.com/nldzsz/ffmpeg-build-scripts                         #"
 log_head_print "# Url: https://github.com/kewlbear/FFmpeg-iOS-build-script                    #"
@@ -110,10 +112,18 @@ log_var_split_print "FFMPEG_ALL_ARCH_ON_IOS=${FFMPEG_ALL_ARCH_ON_IOS[@]}"
 log_var_split_print "FFMPEG_ALL_ARCH_ON_ANDROID=${FFMPEG_ALL_ARCH_ON_ANDROID[@]}"
 
 log_head_print "###############################################################################"
+log_head_print "#### Variable declarations partition on iOS                               #####"
+log_head_print "###############################################################################"
+
+IOS_DEPLOYMENT_MIN_TARGET="8.0"
+
+log_var_split_print "IOS_DEPLOYMENT_MIN_TARGET=$IOS_DEPLOYMENT_MIN_TARGET"
+
+log_head_print "###############################################################################"
 log_head_print "#### Variable declarations partition on Android                           #####"
 log_head_print "###############################################################################"
 
-ANDROID_NDK_DIR="/Users/asteriskzuo/Library/Android/sdk/ndk-bundle"
+ANDROID_NDK_DIR="/Users/zuoyu/Library/Android/sdk/ndk-bundle"
 ANDROID_HOST_TAG="darwin-x86_64"
 ANDROID_TOOLCHAIN_DIR="$ANDROID_NDK_DIR/toolchains/llvm/prebuilt/$ANDROID_HOST_TAG"
 ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
@@ -428,13 +438,13 @@ function ffmpeg_lipo_iOS() {
     log_info_print "ffmpeg_lipo_iOS start..."
     log_info_print "ffmpeg_lipo_iOS param_count=" $# "param_content=" $@
 
-    FROM_LIBRARY_DIR=${FFMPEG_TMP_OS_OUTPUT_DIR}
-    TO_LIBRARY_DIR=${FFMPEG_TMP_OS_LIPO_DIR}
+    local FROM_LIBRARY_DIR=${FFMPEG_TMP_OS_OUTPUT_DIR}
+    local TO_LIBRARY_DIR=${FFMPEG_TMP_OS_LIPO_DIR}
 
     log_var_split_print "FROM_LIBRARY_DIR=$FROM_LIBRARY_DIR"
     log_var_split_print "TO_LIBRARY_DIR=$TO_LIBRARY_DIR"
 
-    LIBRARY_LIST=$(find ${FROM_LIBRARY_DIR}/${FFMPEG_ALL_ARCH_ON_IOS[0]} -name "*.a" | sed "s/^.*\///g")
+    local LIBRARY_LIST=$(find ${FROM_LIBRARY_DIR}/${FFMPEG_ALL_ARCH_ON_IOS[0]} -name "*.a" | sed "s/^.*\///g")
 
     log_var_split_print "LIBRARY_LIST=${LIBRARY_LIST[@]}"
 
@@ -450,77 +460,58 @@ function ffmpeg_build_iOS() {
     log_info_print "ffmpeg_build_iOS start..."
     log_info_print "ffmpeg_build_iOS params_count="$# "params_content="$@
 
-    DEPLOYMENT_MIN_TARGET="8.0"
-    DEVICE_TYPE=""
+    local DEVICE_TYPE=""
+    local TMP_DIR="${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
+    local OUTPUT_DIR="${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
+    local PLATFORM_TRAIT=""
 
-    CFLAGS="-arch ${FFMPEG_CURRENT_ARCH} -std=c11"
-    CXXFLAGS=${CFLAGS}
-    LDFLAGS=${CFLAGS}
-    AS=""
-    CC=""
-
-    TMP_DIR="${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
-    OUTPUT_DIR="${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
-    PLATFORM_TRAIT=""
-
-    CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
-    CONFIGURE_PARAMS_SYSROOT=""
-    CONFIGURE_PARAMS_TARGET_OS="darwin"
-    CONFIGURE_PARAMS_AR=$(which ar)
-    CONFIGURE_PARAMS_AS=$(which as)
-    CONFIGURE_PARAMS_CC=$(which cc)
-    CONFIGURE_PARAMS_CXX=$(which c++)
-    CONFIGURE_PARAMS_LD=$(which ld)
-    CONFIGURE_PARAMS_PKG_CONFIG=$(which pkg-config)
+    local CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
+    local CONFIGURE_PARAMS_SYSROOT=""
+    local CONFIGURE_PARAMS_TARGET_OS="darwin"
+    local CONFIGURE_PARAMS_AR=$(which ar)
+    local CONFIGURE_PARAMS_AS=$(which as)
+    local CONFIGURE_PARAMS_CC=$(which cc)
+    local CONFIGURE_PARAMS_CXX=$(which c++)
+    local CONFIGURE_PARAMS_LD=$(which ld)
+    local CONFIGURE_PARAMS_CFLAGS="-arch ${FFMPEG_CURRENT_ARCH} -std=c11"
+    local CONFIGURE_PARAMS_CXXFLAGS="${CONFIGURE_PARAMS_CFLAGS} -std=c++11"
+    local CONFIGURE_PARAMS_LDFLAGS=${CONFIGURE_PARAMS_CFLAGS}
+    local CONFIGURE_PARAMS_PKG_CONFIG=$(which pkg-config)
 
     if [ "armv7" = ${FFMPEG_CURRENT_ARCH} ]; then
+        CONFIGURE_PARAMS_CFLAGS="$CONFIGURE_PARAMS_CFLAGS -mios-version-min=$IOS_DEPLOYMENT_MIN_TARGET -fembed-bitcode"
         DEVICE_TYPE="iPhoneOS"
-        CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_MIN_TARGET -fembed-bitcode"
         DEVICE_TYPE=$(echo ${DEVICE_TYPE} | tr '[:upper:]' '[:lower:]')
-        CC="xcrun -sdk ${DEVICE_TYPE} clang"
-        AS="gas-preprocessor.pl -- $CC"
+        CONFIGURE_PARAMS_CC="xcrun -sdk ${DEVICE_TYPE} clang"
+        CONFIGURE_PARAMS_AS="gas-preprocessor.pl -- $CONFIGURE_PARAMS_CC"
     elif [ "arm64" = ${FFMPEG_CURRENT_ARCH} ]; then
+        CONFIGURE_PARAMS_CFLAGS="$CONFIGURE_PARAMS_CFLAGS -mios-version-min=$IOS_DEPLOYMENT_MIN_TARGET -fembed-bitcode"
         DEVICE_TYPE="iPhoneOS"
-        CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_MIN_TARGET -fembed-bitcode"
         DEVICE_TYPE=$(echo ${DEVICE_TYPE} | tr '[:upper:]' '[:lower:]')
-        CC="xcrun -sdk ${DEVICE_TYPE} clang"
-        AS="gas-preprocessor.pl -arch aarch64 -- $CC"
+        CONFIGURE_PARAMS_CC="xcrun -sdk ${DEVICE_TYPE} clang"
+        CONFIGURE_PARAMS_AS="gas-preprocessor.pl -arch aarch64 -- $CONFIGURE_PARAMS_CC"
     elif [ "i386" = ${FFMPEG_CURRENT_ARCH} ]; then
+        CONFIGURE_PARAMS_CFLAGS="${CONFIGURE_PARAMS_CFLAGS} -mios-simulator-version-min=$IOS_DEPLOYMENT_MIN_TARGET"
         DEVICE_TYPE="iPhoneSimulator"
-        CFLAGS="${CFLAGS} -mios-simulator-version-min=$DEPLOYMENT_MIN_TARGET"
         DEVICE_TYPE=$(echo ${DEVICE_TYPE} | tr '[:upper:]' '[:lower:]')
-        CC="xcrun -sdk ${DEVICE_TYPE} clang"
-        AS="gas-preprocessor.pl -- $CC"
+        CONFIGURE_PARAMS_CC="xcrun -sdk ${DEVICE_TYPE} clang"
+        CONFIGURE_PARAMS_AS="gas-preprocessor.pl -- $CONFIGURE_PARAMS_CC"
         PLATFORM_TRAIT=${PLATFORM_TRAIT}" --disable-programs"
     elif [ "x86_64" = ${FFMPEG_CURRENT_ARCH} ]; then
+        CONFIGURE_PARAMS_CFLAGS="${CONFIGURE_PARAMS_CFLAGS} -mios-simulator-version-min=$IOS_DEPLOYMENT_MIN_TARGET"
         DEVICE_TYPE="iPhoneSimulator"
-        CFLAGS="${CFLAGS} -mios-simulator-version-min=$DEPLOYMENT_MIN_TARGET"
         DEVICE_TYPE=$(echo ${DEVICE_TYPE} | tr '[:upper:]' '[:lower:]')
-        CC="xcrun -sdk ${DEVICE_TYPE} clang"
-        AS="gas-preprocessor.pl -- $CC"
+        CONFIGURE_PARAMS_CC="xcrun -sdk ${DEVICE_TYPE} clang"
+        CONFIGURE_PARAMS_AS="gas-preprocessor.pl -- $CONFIGURE_PARAMS_CC"
         PLATFORM_TRAIT=${PLATFORM_TRAIT}" --disable-programs"
     fi
 
-    DEVICE_TYPE=$(echo ${DEVICE_TYPE} | tr '[:upper:]' '[:lower:]')
-    # CONFIGURE_PARAMS_AR=$(xcrun -sdk ${DEVICE_TYPE} -f ar)
     CONFIGURE_PARAMS_AR="ar"
-    CONFIGURE_PARAMS_AS=${AS}
-    CONFIGURE_PARAMS_CC=${CC}
-    # CONFIGURE_PARAMS_CXX=$(xcrun -sdk ${DEVICE_TYPE} -f clang++)
-    CONFIGURE_PARAMS_CXX="clang++"
-    CONFIGURE_PARAMS_LD=$(xcrun -sdk ${DEVICE_TYPE} -f ld)
-    # CONFIGURE_PARAMS_LD="ld"
+    CONFIGURE_PARAMS_CXX="$CONFIGURE_PARAMS_CC"
+    CONFIGURE_PARAMS_LD="$CONFIGURE_PARAMS_CC"
     CONFIGURE_PARAMS_SYSROOT=$(xcrun -sdk ${DEVICE_TYPE} --show-sdk-path)
 
-    log_var_split_print "DEPLOYMENT_MIN_TARGET=${DEPLOYMENT_MIN_TARGET}"
     log_var_split_print "DEVICE_TYPE=${DEVICE_TYPE}"
-
-    log_var_split_print "CFLAGS=${CFLAGS}"
-    log_var_split_print "CXXFLAGS=${CXXFLAGS}"
-    log_var_split_print "LDFLAGS=${LDFLAGS}"
-    log_var_split_print "AS=${AS}"
-    log_var_split_print "CC=${CC}"
-
     log_var_split_print "TMP_DIR=$TMP_DIR"
     log_var_split_print "OUTPUT_DIR=$OUTPUT_DIR"
     log_var_split_print "PLATFORM_TRAIT=$PLATFORM_TRAIT"
@@ -533,6 +524,9 @@ function ffmpeg_build_iOS() {
     log_var_split_print "CONFIGURE_PARAMS_CC=${CONFIGURE_PARAMS_CC}"
     log_var_split_print "CONFIGURE_PARAMS_CXX=${CONFIGURE_PARAMS_CXX}"
     log_var_split_print "CONFIGURE_PARAMS_LD=${CONFIGURE_PARAMS_LD}"
+    log_var_split_print "CONFIGURE_PARAMS_CFLAGS=${CONFIGURE_PARAMS_CFLAGS}"
+    log_var_split_print "CONFIGURE_PARAMS_CXXFLAGS=${CONFIGURE_PARAMS_CXXFLAGS}"
+    log_var_split_print "CONFIGURE_PARAMS_LDFLAGS=${CONFIGURE_PARAMS_LDFLAGS}"
     log_var_split_print "CONFIGURE_PARAMS_PKG_CONFIG=${CONFIGURE_PARAMS_PKG_CONFIG}"
 
     # Toolchain options:
@@ -546,8 +540,8 @@ function ffmpeg_build_iOS() {
     # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --ld=${CONFIGURE_PARAMS_LD}"
     # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --pkg-config=${CONFIGURE_PARAMS_PKG_CONFIG}"
     # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --enable-pic"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-cflags=${CFLAGS}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-ldflags=${LDFLAGS}"
+    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-cflags=${CONFIGURE_PARAMS_CFLAGS}"
+    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-CONFIGURE_PARAMS_LDFLAGS=${CONFIGURE_PARAMS_LDFLAGS}"
 
     # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --prefix=${CONFIGURE_PARAMS_PREFIX}"
 
@@ -559,7 +553,7 @@ function ffmpeg_build_iOS() {
 
     # sh -x "./configure" ${CONFIGURE_PARAMS}
 
-    CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
+    local CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     pushd .
@@ -574,8 +568,8 @@ function ffmpeg_build_iOS() {
         --as="${CONFIGURE_PARAMS_AS}" \
         --cc="${CONFIGURE_PARAMS_CC}" \
         --enable-pic \
-        --extra-cflags="${CFLAGS}" \
-        --extra-ldflags="${LDFLAGS}" \
+        --extra-cflags="${CONFIGURE_PARAMS_CFLAGS}" \
+        --extra-ldflags="${CONFIGURE_PARAMS_LDFLAGS}" \
         ${PLATFORM_TRAIT} \
         --disable-debug \
         --disable-doc || (log_error_print "configure fail." && exit 1)
@@ -592,8 +586,8 @@ function ffmpeg_build_iOS() {
     #     "--ld=${CONFIGURE_PARAMS_LD}" \
     #     "--pkg-config=${CONFIGURE_PARAMS_PKG_CONFIG}" \
     #     "--enable-pic" \
-    #     "--extra-cflags=${CFLAGS}" \
-    #     "--extra-ldflags=${LDFLAGS}" \
+    #     "--extra-cflags=${CONFIGURE_PARAMS_CFLAGS}" \
+    #     "--extra-ldflags=${CONFIGURE_PARAMS_LDFLAGS}" \
     #     "--disable-debug" \
     #     "--disable-programs" \
     #     "--disable-doc" ||
@@ -611,16 +605,16 @@ function ffmpeg_build_Android() {
     log_info_print "ffmpeg_build_Android start..."
     log_info_print "ffmpeg_build_Android params_count="$# "params_content="$@
 
-    CURRENT_ARCH_FLAGS=""
-    CURRENT_ARCH_LINK=""
+    local CURRENT_ARCH_FLAGS=""
+    local CURRENT_ARCH_LINK=""
 
     # ARCH_LIST from configure in ffmpeg src
-    CURRENT_ARCH=""
-    CURRENT_TRIPLE_armv7a=""
-    CURRENT_CPU=""
+    local CURRENT_ARCH=""
+    local CURRENT_TRIPLE_armv7a=""
+    local CURRENT_CPU=""
 
-    PKG_CONFIG="$(which pkg-config)"
-    PLATFORM_TRAIT=""
+    local PKG_CONFIG="$(which pkg-config)"
+    local PLATFORM_TRAIT=""
 
     # ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
     # ANDROID_ABIS=("armeabi-v7a" "arm64-v8a" "x86" "x86_64")
@@ -718,12 +712,12 @@ function ffmpeg_build_Android() {
         export RANLIB=${ANDROID_CURRENT_TOOLCHAIN_DIR}/bin/${CURRENT_TRIPLE_armv7a}-ranlib
     fi
 
-    TMP_DIR="${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
-    OUTPUT_DIR="${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
+    local TMP_DIR="${FFMPEG_TMP_OS_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
+    local OUTPUT_DIR="${FFMPEG_TMP_OS_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
 
-    CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
-    CONFIGURE_PARAMS_TARGET_OS="android"
-    CONFIGURE_PARAMS_SYSROOT=""
+    local CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
+    local CONFIGURE_PARAMS_TARGET_OS="android"
+    local CONFIGURE_PARAMS_SYSROOT=""
 
     log_var_split_print "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
     log_var_split_print "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
