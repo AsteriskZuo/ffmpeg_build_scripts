@@ -2,6 +2,103 @@
 
 source ./color_log.sh
 
+echo "###############################################################################" >/dev/null
+echo "#### Help instruction partition                                           #####" >/dev/null
+echo "###############################################################################" >/dev/null
+
+function ffmpeg_is_in() {
+    local value=$1
+    shift
+    for var in $@; do
+        [ $var = $value ] && return 0
+    done
+    return 1
+}
+
+function show_help() {
+    log_info_print "
+
+Usage: $0 [options]
+Options: [defaults in brackets after descriptions]
+
+Help options:
+  --help|-h                print this message
+  --ios[=arch]             only build iOS library ["armv7","arm64","x86_64"]
+  --android[=arch]         only build Android library ["armeabi-v7a","arm64-v8a","x86_64"]
+  --all                    build all library (same without arguments)
+
+Parameter setting:
+  FFMPEG_ENABLE_LOG_FILE:      whether to print logs to files [yes]
+  FFMPEG_ALL_TARGET_OS:        what the build platform includes ["iOS" "Android"]
+  FFMPEG_ALL_ARCH_ON_IOS:      what the build type of iOS platform includes ["armv7" "arm64" "x86_64"]
+  FFMPEG_ALL_ARCH_ON_ANDROID:  what the build type of Android platform includes ["armeabi-v7a" "arm64-v8a" "x86_64"]
+  ANDROID_NDK_DIR:             Android ndk root directory (you must set up ! )
+  IOS_DEPLOYMENT_MIN_TARGET:   the lowest version supported by iOS [8.0]
+  ANDROID_API:                 the lowest version supported by Android [23]
+  ANDROID_ENABLE_STANDALONE_TOOLCHAIN: whether to use standalone toolchain for Android [no]
+  FFMPEG_ENABLE_x264:          whether to enable ffmpeg external library x264 [no]
+  FFMPEG_ENABLE_mp3lame:       whether to enable ffmpeg external library mp3lame [no]
+
+"
+    exit 0
+}
+
+opt_count=$#
+opt=$*
+
+# all build target system platform name
+FFMPEG_ALL_TARGET_OS=("iOS" "Android")
+
+# "armv7" "arm64" "i386" "x86_64"
+# warning: "i386" is not test
+FFMPEG_ALL_ARCH_ON_IOS=("armv7" "arm64" "x86_64")
+
+# "armeabi" "armeabi-v7a" "arm64-v8a" "x86" "x86_64"
+# error: "x86" can not compile success, detail "src/libswscale/x86/rgb2rgb_template.c:1666:13: error: inline assembly requires more registers than available"
+# warning: "armeabi" is not test
+FFMPEG_ALL_ARCH_ON_ANDROID=("armeabi-v7a" "arm64-v8a" "x86_64")
+
+log_var_print "opt=$opt"
+log_var_print "opt_count=$opt_count"
+
+if [ ! $opt ]; then
+    show_help
+fi
+
+for opt; do
+    optval="${opt#*=}"
+    case "$opt" in
+    --help | -h)
+        show_help
+        ;;
+    --ios | --iOS | --ios=* | --iOS=*)
+        FFMPEG_ALL_TARGET_OS=("iOS")
+        if ffmpeg_is_in $optval ${FFMPEG_ALL_ARCH_ON_IOS[@]}; then
+            FFMPEG_ALL_ARCH_ON_IOS=($optval)
+        else
+            local a=1
+        fi
+        break
+        ;;
+    --android | --Android | --android=* | --Android=*)
+        FFMPEG_ALL_TARGET_OS=("Android")
+        if ffmpeg_is_in $optval ${FFMPEG_ALL_ARCH_ON_ANDROID[@]}; then
+            FFMPEG_ALL_ARCH_ON_ANDROID=($optval)
+        else
+            local a=1
+        fi
+        break
+        ;;
+    --all)
+        FFMPEG_ALL_TARGET_OS=("iOS" "Android")
+        break
+        ;;
+    *)
+        show_help
+        ;;
+    esac
+done
+
 log_head_print "###############################################################################"
 log_head_print "# Script Summary:                                                             #"
 log_head_print "# Author:                  yu.zuo                                             #"
@@ -73,18 +170,6 @@ FFMPEG_CURRENT_TARGET_OS=""
 FFMPEG_CURRENT_ARCH=""
 
 FFMPEG_LOG=""
-
-# all build target system platform name
-FFMPEG_ALL_TARGET_OS=("iOS" "Android")
-
-# "armv7" "arm64" "i386" "x86_64"
-# warning: "i386" is not test
-FFMPEG_ALL_ARCH_ON_IOS=("armv7" "arm64" "x86_64")
-
-# "armeabi" "armeabi-v7a" "arm64-v8a" "x86" "x86_64"
-# error: "x86" can not compile success, detail "src/libswscale/x86/rgb2rgb_template.c:1666:13: error: inline assembly requires more registers than available"
-# warning: "armeabi" is not test
-FFMPEG_ALL_ARCH_ON_ANDROID=("armeabi-v7a" "arm64-v8a" "x86_64")
 
 log_var_split_print "FFMPEG_NAME=$FFMPEG_NAME"
 log_var_split_print "FFMPEG_VERSION=$FFMPEG_VERSION"
@@ -164,6 +249,8 @@ log_var_split_print "ANDROID_CURRENT_MARCH=$ANDROID_CURRENT_MARCH"
 log_var_split_print "ANDROID_CURRENT_ABI=$ANDROID_CURRENT_ABI"
 log_var_split_print "ANDROID_CURRENT_TRIPLE=$ANDROID_CURRENT_TRIPLE"
 log_var_split_print "ANDROID_CURRENT_TOOLCHAIN_DIR=$ANDROID_CURRENT_TOOLCHAIN_DIR"
+
+read -n1 -p "Confirm parameters, press any key to continue, otherwise CTRL + C terminates..."
 
 log_head_print "###############################################################################"
 log_head_print "#### Function implementation partition                                    #####"
@@ -337,7 +424,7 @@ function ffmpeg_prerequisites_android() {
     fi
 
     if [ 19 -lt $ANDROID_API -a $ANDROID_API -le $ANDROID_MAX_API ]; then
-        a=1
+        local a=1
     else
         log_error_print "ANDROID_API=$ANDROID_API is not support." && exit 1
     fi
