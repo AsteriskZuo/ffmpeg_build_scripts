@@ -6,6 +6,12 @@ echo "##########################################################################
 echo "#### Help instruction partition                                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
+# Boolean conditional judgment
+FFMPEG_BOOL_SET=("yes" "no")
+
+# Enable or disable
+FFMPEG_ENABLE_SET=("enable" "disable")
+
 function ffmpeg_is_in() {
     local value=$1
     shift
@@ -26,6 +32,7 @@ Help options:
   --ios[=arch]             only build iOS library ["armv7","arm64","x86_64"]
   --android[=arch]         only build Android library ["armeabi-v7a","arm64-v8a","x86_64"]
   --all                    build all library (same without arguments)
+  --eael                   enable all external library
 
 Parameter setting:
   FFMPEG_ENABLE_LOG_FILE:      whether to print logs to files [yes]
@@ -36,8 +43,7 @@ Parameter setting:
   IOS_DEPLOYMENT_MIN_TARGET:   the lowest version supported by iOS [8.0]
   ANDROID_API:                 the lowest version supported by Android [23]
   ANDROID_ENABLE_STANDALONE_TOOLCHAIN: whether to use standalone toolchain for Android [no]
-  FFMPEG_ENABLE_x264:          whether to enable ffmpeg external library x264 [no]
-  FFMPEG_ENABLE_mp3lame:       whether to enable ffmpeg external library mp3lame [no]
+  FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY: whether to enable all ffmpeg external library [no]
 
 "
     exit 0
@@ -57,6 +63,10 @@ FFMPEG_ALL_ARCH_ON_IOS=("armv7" "arm64" "x86_64")
 # error: "x86" can not compile success, detail "src/libswscale/x86/rgb2rgb_template.c:1666:13: error: inline assembly requires more registers than available"
 # warning: "armeabi" is not test
 FFMPEG_ALL_ARCH_ON_ANDROID=("armeabi-v7a" "arm64-v8a" "x86_64")
+
+# "yes" "no"
+# If yes, some libraries might be activated, but if no, they must all be inactive.
+FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY="no"
 
 log_var_print "opt=$opt"
 log_var_print "opt_count=$opt_count"
@@ -78,7 +88,6 @@ for opt; do
         else
             local a=1
         fi
-        break
         ;;
     --android | --Android | --android=* | --Android=*)
         FFMPEG_ALL_TARGET_OS=("Android")
@@ -87,11 +96,16 @@ for opt; do
         else
             local a=1
         fi
-        break
         ;;
     --all)
         FFMPEG_ALL_TARGET_OS=("iOS" "Android")
-        break
+        ;;
+    --eael=*)
+        if ffmpeg_is_in $optval ${FFMPEG_BOOL_SET[@]}; then
+            FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY=($optval)
+        else
+            local a=1
+        fi
         ;;
     *)
         show_help
@@ -250,118 +264,195 @@ log_var_split_print "ANDROID_CURRENT_ABI=$ANDROID_CURRENT_ABI"
 log_var_split_print "ANDROID_CURRENT_TRIPLE=$ANDROID_CURRENT_TRIPLE"
 log_var_split_print "ANDROID_CURRENT_TOOLCHAIN_DIR=$ANDROID_CURRENT_TOOLCHAIN_DIR"
 
+log_head_print "###############################################################################"
+log_head_print "#### external library partition                                           #####"
+log_head_print "###############################################################################"
+
+# Codec library for encoding and decoding AV1 video streams
+# url: https://aomedia.googlesource.com/aom
+FFMPEG_EXTERNAL_LIBRARY_aom="aom"
+FFMPEG_EXTERNAL_LIBRARY_aom_enable="no"
+
+# Minimalistic plugin API for video effects
+# url: https://frei0r.dyne.org/
+FFMPEG_EXTERNAL_LIBRARY_frei0r="frei0r"
+FFMPEG_EXTERNAL_LIBRARY_frei0r_enable="no"
+
+# High quality MPEG Audio Layer III (MP3) encoder
+# url: https://lame.sourceforge.io/
+FFMPEG_EXTERNAL_LIBRARY_lame="lame"
+FFMPEG_EXTERNAL_LIBRARY_lame_enable="no"
+
+# Subtitle renderer for the ASS/SSA subtitle format
+# url: https://github.com/libass/libass
+FFMPEG_EXTERNAL_LIBRARY_libass="libass"
+FFMPEG_EXTERNAL_LIBRARY_libass_enable="no"
+
+# Blu-Ray disc playback library for media players like VLC
+# url: https://www.videolan.org/developers/libbluray.html
+FFMPEG_EXTERNAL_LIBRARY_libbluray="libbluray"
+FFMPEG_EXTERNAL_LIBRARY_libbluray_enable="no"
+
+# High quality, one-dimensional sample-rate conversion library
+# url: https://sourceforge.net/projects/soxr/
+FFMPEG_EXTERNAL_LIBRARY_libsoxr="libsoxr"
+FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable="no"
+
+# Transcode video stabilization plugin
+# url: http://public.hronopik.de/vid.stab/
+FFMPEG_EXTERNAL_LIBRARY_libvidstab="libvidstab"
+FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable="no"
+
+# Vorbis General Audio Compression Codec
+# url: https://xiph.org/vorbis/
+FFMPEG_EXTERNAL_LIBRARY_libvorbis="libvorbis"
+FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable="no"
+
+# VP8/VP9 video codec
+# https://www.webmproject.org/code/
+FFMPEG_EXTERNAL_LIBRARY_libvpx="libvpx"
+FFMPEG_EXTERNAL_LIBRARY_libvpx_enable="no"
+
+# Audio codecs extracted from Android open source project
+# url: https://opencore-amr.sourceforge.io/
+FFMPEG_EXTERNAL_LIBRARY_opencore_amr="opencore-amr"
+FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable="no"
+
+# Library for JPEG-2000 image manipulation
+# url: https://www.openjpeg.org/
+FFMPEG_EXTERNAL_LIBRARY_openjpeg="openjpeg"
+FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable="no"
+
+# Audio codec
+# https://www.opus-codec.org/
+FFMPEG_EXTERNAL_LIBRARY_opus="opus"
+FFMPEG_EXTERNAL_LIBRARY_opus_enable="no"
+
+# Tool for downloading RTMP streaming media
+# https://rtmpdump.mplayerhq.hu/
+FFMPEG_EXTERNAL_LIBRARY_rtmpdump="rtmpdump"
+FFMPEG_EXTERNAL_LIBRARY_rtmpdump_enable="no"
+
+# Audio time stretcher tool and library
+# url: https://breakfastquay.com/rubberband/
+FFMPEG_EXTERNAL_LIBRARY_rubberband="rubberband"
+FFMPEG_EXTERNAL_LIBRARY_rubberband_enable="no"
+
+# Low-level access to audio, keyboard, mouse, joystick, and graphics
+# url: https://www.libsdl.org/
+FFMPEG_EXTERNAL_LIBRARY_sdl2="sdl2"
+FFMPEG_EXTERNAL_LIBRARY_sdl2_enable="no"
+
+# Compression/decompression library aiming for high speed
+# url: https://google.github.io/snappy/
+FFMPEG_EXTERNAL_LIBRARY_snappy="snappy"
+FFMPEG_EXTERNAL_LIBRARY_snappy_enable="no"
+
+# Audio codec designed for speech
+# url: https://speex.org/
+FFMPEG_EXTERNAL_LIBRARY_speex="speex"
+FFMPEG_EXTERNAL_LIBRARY_speex_enable="no"
+
+# OCR (Optical Character Recognition) engine
+# url: https://github.com/tesseract-ocr/
+FFMPEG_EXTERNAL_LIBRARY_tesseract="tesseract"
+FFMPEG_EXTERNAL_LIBRARY_tesseract_enable="no"
+
+# Open video compression format
+# url: https://www.theora.org/
+FFMPEG_EXTERNAL_LIBRARY_theora="theora"
+FFMPEG_EXTERNAL_LIBRARY_theora_enable="no"
+
+# Image format providing lossless and lossy compression for web images
+# https://developers.google.com/speed/webp/
+FFMPEG_EXTERNAL_LIBRARY_webp="webp"
+FFMPEG_EXTERNAL_LIBRARY_webp_enable="no"
+
+# H.264/AVC encoder
+# https://www.videolan.org/developers/x264.html
+FFMPEG_EXTERNAL_LIBRARY_X264="x264"
+FFMPEG_EXTERNAL_LIBRARY_X264_enable="no"
+
+# H.265/HEVC encoder
+# https://bitbucket.org/multicoreware/x265
+FFMPEG_EXTERNAL_LIBRARY_x265="x265"
+FFMPEG_EXTERNAL_LIBRARY_x265_enable="no"
+
+# High-performance, high-quality MPEG-4 video library
+# url: https://labs.xvid.com/
+FFMPEG_EXTERNAL_LIBRARY_xvid="xvid"
+FFMPEG_EXTERNAL_LIBRARY_xvid_enable="no"
+
+# General-purpose data compression with high compression ratio
+# url: https://tukaani.org/xz/
+FFMPEG_EXTERNAL_LIBRARY_xz="xz"
+FFMPEG_EXTERNAL_LIBRARY_xz_enable="no"
+
+# Cryptography and SSL/TLS Toolkit
+# url: https://openssl.org/
+FFMPEG_EXTERNAL_LIBRARY_openssl="openssl"
+FFMPEG_EXTERNAL_LIBRARY_openssl_enable="no"
+
+log_var_split_print "FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY=$FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY"
+if [ "yes" == $FFMPEG_ENABLE_ALL_EXTERNAL_LIBRARY ]; then
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_aom_enable=$FFMPEG_EXTERNAL_LIBRARY_aom_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_frei0r_enable=$FFMPEG_EXTERNAL_LIBRARY_frei0r_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_lame_enable=$FFMPEG_EXTERNAL_LIBRARY_lame_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libass_enable=$FFMPEG_EXTERNAL_LIBRARY_libass_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libbluray_enable=$FFMPEG_EXTERNAL_LIBRARY_libbluray_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable=$FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable=$FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable=$FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_libvpx_enable=$FFMPEG_EXTERNAL_LIBRARY_libvpx_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable=$FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable=$FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_opus_enable=$FFMPEG_EXTERNAL_LIBRARY_opus_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_rtmpdump_enable=$FFMPEG_EXTERNAL_LIBRARY_rtmpdump_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_rubberband_enable=$FFMPEG_EXTERNAL_LIBRARY_rubberband_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_sdl2_enable=$FFMPEG_EXTERNAL_LIBRARY_sdl2_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_snappy_enable=$FFMPEG_EXTERNAL_LIBRARY_snappy_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_speex_enable=$FFMPEG_EXTERNAL_LIBRARY_speex_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_tesseract_enable=$FFMPEG_EXTERNAL_LIBRARY_tesseract_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_theora_enable=$FFMPEG_EXTERNAL_LIBRARY_theora_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_webp_enable=$FFMPEG_EXTERNAL_LIBRARY_webp_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_X264_enable=$FFMPEG_EXTERNAL_LIBRARY_X264_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_x265_enable=$FFMPEG_EXTERNAL_LIBRARY_x265_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_xvid_enable=$FFMPEG_EXTERNAL_LIBRARY_xvid_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_xz_enable=$FFMPEG_EXTERNAL_LIBRARY_xz_enable"
+    log_var_split_print "FFMPEG_EXTERNAL_LIBRARY_openssl_enable=$FFMPEG_EXTERNAL_LIBRARY_openssl_enable"
+else
+    FFMPEG_EXTERNAL_LIBRARY_aom_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_frei0r_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_lame_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libass_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libbluray_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_libvpx_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_opus_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_rtmpdump_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_rubberband_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_sdl2_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_snappy_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_speex_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_tesseract_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_theora_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_webp_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_X264_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_x265_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_xvid_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_xz_enable="no"
+    FFMPEG_EXTERNAL_LIBRARY_openssl_enable="no"
+fi
+
 read -n1 -p "Confirm parameters, press any key to continue, otherwise CTRL + C terminates..."
 
 log_head_print "###############################################################################"
 log_head_print "#### Function implementation partition                                    #####"
 log_head_print "###############################################################################"
-
-function ffmpeg_test() {
-    # special test function by man test commandline
-    # $ man test
-    echo "ffmpeg_test start..."
-    if test 1 -eq 1; then
-        echo "1 -eq 1"
-    elif test 1 -eq 2; then
-        echo "1 -eq 2"
-    fi
-
-    if test "str1" = "str2"; then
-        echo "str1" = "str2"
-    elif test "str1" != "str2"; then
-        echo "str1" != "str2"
-    fi
-
-    if test -b ".gitignore"; then
-        echo -b ".gitignore"
-    elif test -c ".gitignore"; then
-        echo -c ".gitignore"
-    elif test -e ".gitignore"; then
-        echo -e ".gitignore"
-    else
-        echo ! -b ".gitignore"
-    fi
-
-    if test -d "dir"; then
-        echo -d "dir"
-    else
-        echo ! -d "dir"
-    fi
-
-    if test ! -d "dir2"; then
-        echo ! -d "dir2"
-    else
-        echo -d "dir2"
-    fi
-
-    if [ ! -d "dir3" ]; then
-        echo ! -d "dir3"
-    else
-        echo -d "dir3"
-    fi
-
-    a=18
-    b=19
-    c=17
-    echo "a=$a b=$b c=$c"
-    if [ $a -lt $b ]; then
-        echo "a < b is true"
-    else
-        echo "a < b is false"
-    fi
-
-    if [ $a -lt $b -a $b -lt $c ]; then
-        echo "a < b and b < c is true "
-    else
-        echo "a < b and b < c is false "
-    fi
-
-    # ANDROID_API=19
-    # ANDROID_API=30
-    # ANDROID_API=""
-    # ANDROID_API="lla "
-    # if [ $ANDROID_API -le 19 ]; then
-    #     echo "ANDROID_API=$ANDROID_API is not support."
-    #     exit 1
-    # elif [ $ANDROID_MAX_API -lt $ANDROID_API ]; then
-    #     echo "ANDROID_API=$ANDROID_API is not support."
-    #     exit 1
-    # else
-    #     echo "ANDROID_API=$ANDROID_API is error."
-    #     exit 1
-    # fi
-    echo "ffmpeg_test end..."
-}
-
-function ffmpeg_for_test() {
-    for num in 1 2 3 4 5; do
-        for char in "a" "b" "c" "d" "e"; do
-            echo $num $char
-        done
-    done
-}
-
-function ffmpeg_params_test_internal() {
-    echo "ffmpeg_params_test_internal start..."
-    echo "ffmpeg_params_test_internal params count: " $#
-    echo "ffmpeg_params_test_internal params : " $* "|" $$ "|" $! "|" $@ "|" $- "|" $?
-
-    for ((i = 1; i <= $#; i++)); do
-        echo "params["$i"]="$i
-    done
-
-    for param in $*; do
-        echo "ffmpeg_params_test_internal param="$param
-    done
-
-    echo "ffmpeg_params_test_internal end..."
-}
-
-function ffmpeg_params_test() {
-    echo "ffmpeg_params_test start..."
-    ffmpeg_params_test_internal 2 3 4 5 6
-    echo "ffmpeg_params_test end..."
-}
 
 function ffmpeg_output_log_control() {
     if [ "yes" != $FFMPEG_ENABLE_LOG_FILE ]; then

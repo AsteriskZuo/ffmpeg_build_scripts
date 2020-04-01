@@ -98,53 +98,6 @@ echo "##########################################################################
 
 # log_xxx_print function is very easily replaced by echo command-line
 
-function log_test() {
-    local x=100
-    ptrx=x
-    eval $ptrx=50
-    echo $x
-
-    y=100
-    ptry=$y
-    eval $ptry=50
-    echo $y
-
-    a=100
-    ptra=a
-    $ptra=50
-    echo $a
-
-    b=100
-    ptrb=b
-    $ptrb=50
-    echo $b
-
-    eval $ptrc=50
-    echo $ptrc
-}
-
-function log_test_sed() {
-    params=("1 2 3" "4 5")
-    echo ${#params[@]}
-    echo ${params[@]}
-
-    params=($(echo "1234=567 90" | sed "s/=/&\ /g"))
-    echo ${#params[@]}
-    echo ${params[@]}
-
-    params2=($(echo "1234=567 90" | sed "s/^.*\\=//g"))
-    echo ${#params2[@]}
-    echo ${params2[@]}
-    echo ${params2[0]}
-    echo ${params2[1]}
-
-    params3=($(echo "1234=567 90" | sed "s/\\=.*$//g"))
-    echo ${#params3[@]}
-    echo ${params3[@]}
-    echo ${params3[0]}
-    echo ${params3[1]}
-}
-
 function log_basic_print() {
     # background: ${1}
     # foreground: ${2}
@@ -222,35 +175,6 @@ function log_print() {
     # log content: ${1}
     echo $@
 }
-
-echo "###############################################################################" >/dev/null
-echo "#### Function test partition                                              #####" >/dev/null
-echo "###############################################################################" >/dev/null
-
-# log_basic_print ${LOG_VAR_BG_GREEN} ${LOG_VAR_FG_RED} ${LOG_VAR_BLINK} "log test content"
-# log_basic_print ${LOG_VAR_BG_BLACK} ${LOG_VAR_FG_RED} ${LOG_VAR_BLINK} "log test content"
-# log_debug_print "debug: log test content"
-# log_info_print "info: log test content"
-# log_warning_print "warning: log test content"
-# log_error_print "error: log test content"
-# log_fatal_print "fatal: log test content"
-# log_print "common: log test content"
-
-# echo "standalone syntax:" "\\033[${LOG_VAR_BG_GREEN}m\\033[${LOG_VAR_FG_RED}m\\033[7m \"log test content\"\\033[0m"
-# echo ";;; syntax:" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};7m \"log test content\"\\033[0m"
-# echo "1m:" "\\033[${LOG_VAR_FG_RED};1m \"log test content\"\\033[0m"
-# echo "4m:" "\\033[${LOG_VAR_FG_RED};4m \"log test content\"\\033[0m"
-# echo "5m:" "\\033[${LOG_VAR_FG_RED};5m \"log test content\"\\033[0m"
-# echo "7m:" "\\033[${LOG_VAR_FG_RED};7m \"log test content\"\\033[0m"
-# echo "8m:" "\\033[${LOG_VAR_FG_RED};8m \"log test content\"\\033[0m"
-# echo "foreground:" "\\033[${LOG_VAR_FG_RED}m \"log test content\"\\033[0m"
-# echo "background:" "\\033[${LOG_VAR_BG_GREEN}m \"log test content\"\\033[0m"
-# echo "foreground:background" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED}m \"log test content\"\\033[0m"
-# echo "foreground:background:1m" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};1m \"log test content\"\\033[0m"
-# echo "foreground:background:4m" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};4m \"log test content\"\\033[0m"
-# echo "foreground:background:5m" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};5m \"log test content\"\\033[0m"
-# echo "foreground:background:7m" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};7m \"log test content\"\\033[0m"
-# echo "foreground:background:8m" "\\033[${LOG_VAR_BG_GREEN};${LOG_VAR_FG_RED};8m \"log test content\"\\033[0m"
 
 log_info_print "import color log function..."
 # read -n1 -p "Press any key to continue..."
