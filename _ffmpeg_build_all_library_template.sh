@@ -3,6 +3,7 @@
 echo "###############################################################################"
 echo "# Script Summary:                                                             #"
 echo "# Author:                  xxx                                                #"
+echo "# Create Date:             xxxx.xx.xx                                         #"
 echo "# Update Date:             xxxx.xx.xx                                         #"
 echo "# Script version:          x.x.x                                              #"
 echo "# Url: http://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                    #"

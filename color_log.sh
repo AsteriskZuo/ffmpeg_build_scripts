@@ -15,10 +15,6 @@ echo "#                                                                         
 echo "# Reference:                                                                  #" >/dev/null
 echo "# Url: https://blog.csdn.net/kx_nullpointer/article/details/38585963          #" >/dev/null
 echo "# Url: https://www.centos.bz/2013/07/linux-shell-c-show-color-word/           #" >/dev/null
-echo "# Url: https://blog.csdn.net/Jerry_1126/article/details/80628359              #" >/dev/null
-echo "# Url: https://blog.csdn.net/neo949332116/article/details/100181500           #" >/dev/null
-echo "# Url: https://blog.csdn.net/taiyang1987912/article/details/39551385          #" >/dev/null
-echo "# Url: https://www.cnblogs.com/hurryup/articles/10241601.html                 #" >/dev/null
 echo "###############################################################################" >/dev/null
 
 echo "# 基本语法介绍:
@@ -119,7 +115,7 @@ function log_head_print() {
 function log_var_print() {
     FOREGROUND=$LOG_VAR_FG_SKY_BLUE
     FONT=$LOG_VAR_BLINK
-    echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    echo "  \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_var_split_print() {
     # changed original content for space char
@@ -129,7 +125,7 @@ function log_var_split_print() {
     KEY=$(echo $@ | sed "s/\\=.*$//g")
     # VALUE=$(echo $@ | sed "s/^.*\\=//g")
     VALUE=${@#*=}
-    echo "\\033[${FOREGROUND};${FONT}m${KEY} \\033[${LOG_VAR_FG_YELLOW}m= \\033[${FOREGROUND}m${VALUE}\\033[0m"
+    echo "  \\033[${FOREGROUND};${FONT}m${KEY} \\033[${LOG_VAR_FG_YELLOW}m= \\033[${FOREGROUND}m${VALUE}\\033[0m"
 }
 function log_debug_print() {
     # high | blue
@@ -140,7 +136,7 @@ function log_debug_print() {
     # not changed original content
     FOREGROUND=$LOG_VAR_FG_BLUE
     FONT=$LOG_VAR_BLINK
-    echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    echo "    \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_info_print() {
     # high | green
@@ -176,5 +172,5 @@ function log_print() {
     echo $@
 }
 
-log_info_print "import color log function..."
+log_info_print "import color log function from $0 ..."
 # read -n1 -p "Press any key to continue..."
