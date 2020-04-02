@@ -31,4 +31,13 @@ Url: https://blog.csdn.net/taiyang1987912/article/details/39551385
 Url: https://github.com/libav/gas-preprocessor              
 Url: https://github.com/nldzsz/ffmpeg-build-scripts            
 Url: https://github.com/kewlbear/FFmpeg-iOS-build-script         
+## Usage  
+1. ffmpeg_build_all_library.sh is compile library script.  
+2. ffmpeg_directory_design.emmx is file struction design by mindmaster.    
+3. ffmpeg_external_library.md is external library readme.    
+4. ffmpeg_global_variable.sh is global variable for internal use.  
+5. color_log.sh is color log function for internal use.    
+6. _ffmpeg_build_all_library_template.sh is template for build script.    
+7. ffmpeg_test dir is use for test.  
+8. ffmpeg_script dir holds subscript for internal use.  
 
