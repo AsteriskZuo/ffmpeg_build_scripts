@@ -40,6 +40,27 @@ echo "##########################################################################
 echo "#### Function implementation partition                                    #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
+log_info_print "
+    
+脚本模板使用说明：
+	1.该脚本为子脚本，不建议单独使用；
+	2.该脚本可以使用本全局变量，但是不建议修改；
+	3.该脚本某些函数(方法)会被主脚本适当时机调用(后面详细介绍)；
+	4.该脚本文件名字格式必须为：build_library_xxx，其中xxx为专有名词；
+	5.该脚本为插件式脚本，由主脚本自动判断是否符合条件并加载和使用其中指定函数(方法)；
+	6.该脚本请尽量使用本地变量（local xxx），避免与其他脚本或全局变量冲突。
+	7.如果必须要使用全局变量可以以xxx开头命名变量。
+    
+Script template instructions:
+    1. The script is a subscript, which is not recommended to be used separately;
+    2. The script can use this global variable, but it is not recommended to modify it;
+    3. Some of the functions (methods) of the script will be called appropriately by the main script (more on that later);
+    4. The script file name format must be: build_library_xxx, where XXX is a proper noun;
+    5. The script is a plug-in script, and the main script automatically determines whether it meets the conditions and loads and USES the specified functions (methods);
+    6. For this script, use local XXX whenever possible to avoid conflicts with other scripts or global variables.
+    7. If you must use global variables, you can name variables beginning with XXX.
+"
+
 # xxx is library name
 function ffm_lib_xxx() {
     log_info_print "ffm_lib_xxx start..."

@@ -91,6 +91,7 @@ export FFMPEG_TMP_OS_XXX_DIR=""
 export FFMPEG_TMP_OS_XXX_TMP_DIR=""
 export FFMPEG_TMP_OS_XXX_OUTPUT_DIR=""
 export FFMPEG_TMP_OS_XXX_SRC_DIR=""
+export FFMPEG_TMP_OS_XXX_INCLUDE_DIR=""
 
 export FFMPEG_CURRENT_TARGET_OS=""
 export FFMPEG_CURRENT_ARCH=""
@@ -297,8 +298,8 @@ export FFMPEG_EXTERNAL_LIBRARY_webp_url=""
 # advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_X264="x264"
 export FFMPEG_EXTERNAL_LIBRARY_X264_enable="yes"
-export FFMPEG_EXTERNAL_LIBRARY_x264_version="r2917"
-export FFMPEG_EXTERNAL_LIBRARY_x264_url=""
+export FFMPEG_EXTERNAL_LIBRARY_x264_version="1771b556"
+export FFMPEG_EXTERNAL_LIBRARY_x264_url="https://code.videolan.org/videolan/x264.git"
 
 # H.265/HEVC encoder
 # https://bitbucket.org/multicoreware/x265

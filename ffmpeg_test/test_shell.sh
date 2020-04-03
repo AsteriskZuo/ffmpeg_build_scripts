@@ -23,6 +23,9 @@ echo "# Url: https://blog.csdn.net/taiyang1987912/article/details/39551385      
 echo "# Url: https://www.cnblogs.com/hurryup/articles/10241601.html                 #" >/dev/null
 echo "# Url: https://cloud.tencent.com/developer/ask/59944                          #" >/dev/null
 echo "# Url: https://www.cnblogs.com/lmx1002/p/10132656.html                        #" >/dev/null
+echo "# Url: https://blog.csdn.net/panfengzjz/article/details/81865925              #" >/dev/null
+echo "# Url: http://www.voidcn.com/article/p-qpmevtxb-btr.html                      #" >/dev/null
+echo "# Url: https://cloud.tencent.com/developer/ask/151529                         #" >/dev/null
 echo "###############################################################################" >/dev/null
 
 echo "###############################################################################" >/dev/null
@@ -459,10 +462,38 @@ function ffmpeg_test_get_var_var_value() {
     ssss="FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_EXTERNAL_LIBRARY_aom}_version"
     eeee=$(eval echo '$'"${ssss}")
     echo ${eeee}
-    ffff=`eval echo '$'"${ssss}"`
+    ffff=$(eval echo '$'"${ssss}")
     echo ${ffff}
     gggg=$(eval echo '$'${ssss})
     echo ${gggg}
 }
+
+function test_transfer_parameters() {
+    echo $@
+}
+function test_invoke_transfer_parameters() {
+    # 字符串参数包含连续多个空格 ?
+    test_transfer_parameters [["hello   world"]]
+    test_transfer_parameters 'hello   world'
+}
+
+function test_var_var() {
+    local var_1="haha"
+    var_var_1=$var_1
+    echo $var_var_1
+    var_var_1=var_1
+    echo $var_var_1
+}
+# set -v
+# set -x
+# ls -la
+
+# 显示执行命令所在行的行号
+# set -x
+# PS4=':${LINENO}+'
+# ls -la
+# ls -la
+
+
 
 read -n1 -p "any key...."
