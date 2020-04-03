@@ -64,16 +64,16 @@ export FFMPEG_WORK_THREAD_COUNT="4"
 
 # "src" "tmp" "tool"
 export FFMPEG_ALL_CLEAN_TYPE_PREDEFINE=("src" "tmp" "tool")
-export FFMPEG_ALL_CLEAN_TYPE=()
+export FFMPEG_ALL_CLEAN_TYPE=("tmp")
 
 export FFMPEG_NAME="ffmpeg"
 export FFMPEG_VERSION="4.2.2"
 export FFMPEG_FULL_NAME=${FFMPEG_NAME}-${FFMPEG_VERSION}
 export FFMPEG_URL="http://www.ffmpeg.org/releases/${FFMPEG_NAME}-${FFMPEG_VERSION}.tar.bz2"
-export FFMPEG_XXX_NAME=""
-export FFMPEG_XXX_VERSION=""
-export FFMPEG_XXX_FULL_NAME=""
-export FFMPEG_XXX_URL=""
+export FFMPEG_XXX_NAME=$FFMPEG_NAME
+export FFMPEG_XXX_VERSION=$FFMPEG_VERSION
+export FFMPEG_XXX_FULL_NAME=$FFMPEG_FULL_NAME
+export FFMPEG_XXX_URL=$FFMPEG_URL
 
 export FFMPEG_ROOT_DIR=$(pwd)
 export FFMPEG_SH_SUB_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_script"
@@ -107,7 +107,7 @@ echo "##########################################################################
 echo "#### Variable declarations partition on Android                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export ANDROID_NDK_DIR="/Users/asteriskzuo/Library/Android/sdk/ndk-bundle"
+export ANDROID_NDK_DIR="/Users/zuoyu/Library/Android/sdk/ndk-bundle"
 export ANDROID_HOST_TAG="darwin-x86_64"
 export ANDROID_TOOLCHAIN_DIR="$ANDROID_NDK_DIR/toolchains/llvm/prebuilt/$ANDROID_HOST_TAG"
 export ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
@@ -142,8 +142,9 @@ export FFMPEG_ALL_BUILD_LIBRARY=(${FFMPEG_NAME})
 
 # Codec library for encoding and decoding AV1 video streams
 # url: https://aomedia.googlesource.com/aom
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_aom="aom"
-export FFMPEG_EXTERNAL_LIBRARY_aom_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_aom_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_aom_version="1.0.0"
 export FFMPEG_EXTERNAL_LIBRARY_aom_url="http://xxx.com/${FFMPEG_EXTERNAL_LIBRARY_aom}-${FFMPEG_EXTERNAL_LIBRARY_aom_version}.zip"
 
@@ -156,8 +157,9 @@ export FFMPEG_EXTERNAL_LIBRARY_frei0r_url=""
 
 # High quality MPEG Audio Layer III (MP3) encoder
 # url: https://lame.sourceforge.io/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_lame="lame"
-export FFMPEG_EXTERNAL_LIBRARY_lame_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_lame_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_lame_version="3.100"
 export FFMPEG_EXTERNAL_LIBRARY_lame_url=""
 
@@ -170,57 +172,64 @@ export FFMPEG_EXTERNAL_LIBRARY_libass_url=""
 
 # Blu-Ray disc playback library for media players like VLC
 # url: https://www.videolan.org/developers/libbluray.html
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_libbluray="libbluray"
-export FFMPEG_EXTERNAL_LIBRARY_libbluray_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_libbluray_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_libbluray_version="1.1.2"
 export FFMPEG_EXTERNAL_LIBRARY_libbluray_url=""
 
 # High quality, one-dimensional sample-rate conversion library
 # url: https://sourceforge.net/projects/soxr/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_libsoxr="libsoxr"
-export FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_libsoxr_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_libsoxr_version="0.1.3"
 export FFMPEG_EXTERNAL_LIBRARY_libsoxr_url=""
 
 # Transcode video stabilization plugin
 # url: http://public.hronopik.de/vid.stab/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_libvidstab="libvidstab"
-export FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_libvidstab_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_libvidstab_version="1.1.0"
 export FFMPEG_EXTERNAL_LIBRARY_libvidstab_url=""
 
 # Vorbis General Audio Compression Codec
 # url: https://xiph.org/vorbis/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_libvorbis="libvorbis"
-export FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_libvorbis_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_libvorbis_version="1.3.6"
 export FFMPEG_EXTERNAL_LIBRARY_libvorbis_url=""
 
 # VP8/VP9 video codec
 # https://www.webmproject.org/code/
 export FFMPEG_EXTERNAL_LIBRARY_libvpx="libvpx"
-export FFMPEG_EXTERNAL_LIBRARY_libvpx_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_libvpx_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_libvpx_version="1.8.2"
 export FFMPEG_EXTERNAL_LIBRARY_libvpx_url=""
 
 # Audio codecs extracted from Android open source project
 # url: https://opencore-amr.sourceforge.io/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_opencore_amr="opencore_amr"
-export FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_opencore_amr_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_opencore_amr_version="0.1.5"
 export FFMPEG_EXTERNAL_LIBRARY_opencore_amr_url=""
 
 # Library for JPEG-2000 image manipulation
 # url: https://www.openjpeg.org/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_openjpeg="openjpeg"
-export FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_openjpeg_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_openjpeg_version="2.3.1"
 export FFMPEG_EXTERNAL_LIBRARY_openjpeg_url=""
 
 # Audio codec
 # https://www.opus-codec.org/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_opus="opus"
-export FFMPEG_EXTERNAL_LIBRARY_opus_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_opus_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_opus_version="1.3.1"
 export FFMPEG_EXTERNAL_LIBRARY_opus_url=""
 
@@ -254,8 +263,9 @@ export FFMPEG_EXTERNAL_LIBRARY_snappy_url=""
 
 # Audio codec designed for speech
 # url: https://speex.org/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_speex="speex"
-export FFMPEG_EXTERNAL_LIBRARY_speex_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_speex_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_speex_version="1.2.0"
 export FFMPEG_EXTERNAL_LIBRARY_speex_url=""
 
@@ -268,20 +278,23 @@ export FFMPEG_EXTERNAL_LIBRARY_tesseract_url=""
 
 # Open video compression format
 # url: https://www.theora.org/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_theora="theora"
-export FFMPEG_EXTERNAL_LIBRARY_theora_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_theora_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_theora_version="1.1.1"
 export FFMPEG_EXTERNAL_LIBRARY_theora_url=""
 
 # Image format providing lossless and lossy compression for web images
 # https://developers.google.com/speed/webp/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_webp="webp"
-export FFMPEG_EXTERNAL_LIBRARY_webp_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_webp_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_webp_version="1.1.0"
 export FFMPEG_EXTERNAL_LIBRARY_webp_url=""
 
 # H.264/AVC encoder
 # https://www.videolan.org/developers/x264.html
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_X264="x264"
 export FFMPEG_EXTERNAL_LIBRARY_X264_enable="yes"
 export FFMPEG_EXTERNAL_LIBRARY_x264_version="r2917"
@@ -289,27 +302,31 @@ export FFMPEG_EXTERNAL_LIBRARY_x264_url=""
 
 # H.265/HEVC encoder
 # https://bitbucket.org/multicoreware/x265
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_x265="x265"
-export FFMPEG_EXTERNAL_LIBRARY_x265_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_x265_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_x265_version="3.3"
 export FFMPEG_EXTERNAL_LIBRARY_x265_url=""
 
 # High-performance, high-quality MPEG-4 video library
 # url: https://labs.xvid.com/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_xvid="xvid"
-export FFMPEG_EXTERNAL_LIBRARY_xvid_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_xvid_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_xvid_version="1.3.7"
 export FFMPEG_EXTERNAL_LIBRARY_xvid_url=""
 
 # General-purpose data compression with high compression ratio
 # url: https://tukaani.org/xz/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_xz="xz"
-export FFMPEG_EXTERNAL_LIBRARY_xz_enable="yes"
+export FFMPEG_EXTERNAL_LIBRARY_xz_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_xz_version="5.2.4"
 export FFMPEG_EXTERNAL_LIBRARY_xz_url=""
 
 # Cryptography and SSL/TLS Toolkit
 # url: https://openssl.org/
+# advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_openssl="openssl"
 export FFMPEG_EXTERNAL_LIBRARY_openssl_enable="no"
 export FFMPEG_EXTERNAL_LIBRARY_openssl_version="1.1.1d"

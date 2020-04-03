@@ -3,6 +3,8 @@
 # source ../color_log.sh
 source ./ffmpeg_global_variable.sh
 
+log_debug_print "load script $0 ..."
+
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null

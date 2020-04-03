@@ -158,6 +158,7 @@ function log_error_print() {
     FOREGROUND=$LOG_VAR_FG_RED
     FONT=$LOG_VAR_BOLD
     echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    exit 1
 }
 function log_fatal_print() {
     # high | bold | red | blink

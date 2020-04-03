@@ -385,19 +385,19 @@ function ffmpeg_prerequisites_ios() {
 
     if [ ! $(which perl) ]; then
         log_warning_print 'Perl not found. Trying to install...'
-        brew install 'perl@5.18' || log_error_print "Perl install fail." && exit 1
+        brew install 'perl@5.18' || log_error_print "Perl install fail."
     fi
 
     if [ ! $(which yasm) ]; then
         log_warning_print 'Yasm not found. Trying to install...'
-        brew install yasm || log_error_print "Yasm install fail." && exit 1
+        brew install yasm || log_error_print "Yasm install fail."
     fi
 
     if [ ! $(which gas-preprocessor.pl) ]; then
         log_warning_print 'gas-preprocessor.pl not found. Trying to install...'
         log_debug_print "download url: https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl"
-        curl -L https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl -o /usr/local/bin/gas-preprocessor.pl || log_error_print "download fail." && exit 1
-        chmod +x /usr/local/bin/gas-preprocessor.pl || log_error_print "gas-preprocessor.pl install fail." && exit 1
+        curl -L https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl -o /usr/local/bin/gas-preprocessor.pl || log_error_print "download fail."
+        chmod +x /usr/local/bin/gas-preprocessor.pl || log_error_print "gas-preprocessor.pl install fail."
     fi
 
     log_info_print "ffmpeg_prerequisites_ios end..."
@@ -407,29 +407,29 @@ function ffmpeg_prerequisites_android() {
     log_info_print "ffmpeg_prerequisites_android start..."
 
     if [ ! -d ${ANDROID_NDK_DIR} ]; then
-        log_error_print "Please set android ndk dir." && exit 1
+        log_error_print "Please set android ndk dir."
     fi
 
     if [ 19 -lt $ANDROID_API -a $ANDROID_API -le $ANDROID_MAX_API ]; then
         local a=1
     else
-        log_error_print "ANDROID_API=$ANDROID_API is not support." && exit 1
+        log_error_print "ANDROID_API=$ANDROID_API is not support."
     fi
 
     if [ ! $(which nasm) ]; then
         log_warning_print "Nasm not found. Trying to install..."
-        brew install nasm || log_error_print "Nasm install fail." && exit 1
+        brew install nasm || log_error_print "Nasm install fail."
     fi
 
     # python 2.7.x
     if [ ! $(which python) ]; then
         log_warning_print "Python not found. Trying to install..."
-        brew install python || log_error_print "Python 2.7.x install fail." && exit 1
+        brew install python || log_error_print "Python 2.7.x install fail."
     fi
 
     if [ "yes" = $ANDROID_ENABLE_STANDALONE_TOOLCHAIN ]; then
 
-        ANDROID_TOOLCHAIN_DIR="$FFMPEG_TOOL_DIR/ffmpeg_android"
+        ANDROID_TOOLCHAIN_DIR="$FFMPEG_TOOL_DIR/android"
         log_var_split_print "ANDROID_TOOLCHAIN_DIR=$ANDROID_TOOLCHAIN_DIR"
 
         if [ ! -d ${ANDROID_TOOLCHAIN_DIR} ]; then
@@ -443,7 +443,7 @@ function ffmpeg_prerequisites_android() {
                     --arch ${MARCH} \
                     --api ${ANDROID_API} \
                     --stl libc++ \
-                    --install-dir=${ANDROID_TOOLCHAIN_DIR}/${MARCH} || log_error_print "Android toolchain install fail." && exit 1
+                    --install-dir=${ANDROID_TOOLCHAIN_DIR}/${MARCH} || log_error_print "Android toolchain install fail."
             fi
         done
 
@@ -459,11 +459,25 @@ function ffmpeg_prerequisites_android() {
 function ffmpeg_download_src() {
     log_info_print "ffmpeg_download_src start..."
 
-    if [ ! -r $FFMPEG_FULL_NAME ]; then
+    local local_src_zip=${FFMPEG_SRC_DIR}/${FFMPEG_NAME}/${FFMPEG_FULL_NAME}.tar.bz2
+    if [ ! -r ${local_src_zip} ]; then
         log_warning_print 'FFmpeg source file not found. Trying to download...'
         log_debug_print "download url: http://www.ffmpeg.org/releases/$FFMPEG_FULL_NAME.tar.bz2"
-        curl ${FFMPEG_URL} >${FFMPEG_FULL_NAME}.tar.bz2 || log_error_print "ffmpeg src download fail." && exit 1
-        tar -x -f ${FFMPEG_FULL_NAME}.tar.bz2 || log_error_print "ffmpeg src uncompress fail." && exit 1
+        mkdir -p "${FFMPEG_SRC_DIR}/${FFMPEG_NAME}"
+        local DOWNLOAD_SUCCESS="yes"
+        curl -SL ${FFMPEG_URL} >${local_src_zip} || DOWNLOAD_SUCCESS="no"
+        if [ "no" = $DOWNLOAD_SUCCESS ]; then
+            log_error_print "ffmpeg src download fail." && rm -rf ${local_src_zip}
+        fi
+    fi
+    local local_src=${FFMPEG_SRC_DIR}/${FFMPEG_NAME}/${FFMPEG_FULL_NAME}
+    # rm -rf ${local_src}
+    if [ ! -d "${local_src}" ]; then
+        local uncompress_success="yes"
+        tar -x -C "${FFMPEG_SRC_DIR}/${FFMPEG_NAME}" -f "${local_src_zip}" || uncompress_success="no"
+        if [ "no" = uncompress_success ]; then
+            log_error_print "ffmpeg src uncompress fail." && rm -rf ${local_src}
+        fi
     fi
 
     log_info_print "ffmpeg_download_src end..."
@@ -473,23 +487,23 @@ function ffmpeg_prerequisites_common() {
     log_info_print "ffmpeg_prerequisites_common start..."
 
     if [ ! $(which curl) ]; then
-        log_error_print "Curl not found." && exit 1
+        log_error_print "Curl not found."
     fi
 
     if [ ! $(which tar) ]; then
-        log_error_print "Pkg-config not found." && exit 1
+        log_error_print "Pkg-config not found."
     fi
 
     if [ ! $(which brew) ]; then
         # Changed brew setting in .brew_install
         log_warning_print 'Homebrew not found. Trying to install...'
         log_debug_print "Brew install url: https://raw.githubusercontent.com/Homebrew/install/master/install"
-        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || log_error_print "brew install fail." && exit 1
+        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || log_error_print "brew install fail."
     fi
 
     if [ ! $(which pkg-config) ]; then
         log_warning_print "Pkg-config not found. Trying to install..."
-        brew install pkg-config || log_error_print "Pkg-config install fail." && exit 1
+        brew install pkg-config || log_error_print "Pkg-config install fail."
     fi
 
     log_info_print "ffmpeg_prerequisites_common end..."
@@ -524,7 +538,7 @@ function ffmpeg_lipo_iOS() {
 
     for LIBRARY_FILE in ${LIBRARY_LIST[@]}; do
         log_var_split_print "LIBRARY_FILE=$LIBRARY_FILE"
-        lipo -create $(find $FROM_LIBRARY_DIR -name $LIBRARY_FILE) -output $TO_LIBRARY_DIR/$LIBRARY_FILE || log_error_print "lipo fail." && exit 1
+        lipo -create $(find $FROM_LIBRARY_DIR -name $LIBRARY_FILE) -output $TO_LIBRARY_DIR/$LIBRARY_FILE || log_error_print "lipo fail."
     done
 
     log_info_print "ffmpeg_lipo_iOS end..."
@@ -627,9 +641,10 @@ function ffmpeg_build_iOS() {
 
     # sh -x "./configure" ${CONFIGURE_PARAMS}
 
-    local CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
+    local CONFIGURE_FILE="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
+    log_debug_print "$CONFIGURE_FILE in progress ..."
     # read -n1 -p "Press any key to continue..."
 
     pushd .
@@ -648,9 +663,7 @@ function ffmpeg_build_iOS() {
         --extra-ldflags="${CONFIGURE_PARAMS_LDFLAGS}" \
         ${PLATFORM_TRAIT} \
         --disable-debug \
-        --disable-doc >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details." && exit 1
-
-    read -n1 -p "Press any key to continue..."
+        --disable-doc >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     # sh $CONFIGURE_FILE \
     #     "--prefix=${CONFIGURE_PARAMS_PREFIX}" \
@@ -671,8 +684,11 @@ function ffmpeg_build_iOS() {
     #     "--disable-doc" ||
     #     exit 1
 
-    make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details." && exit 1
-    make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details." && exit 1
+    log_debug_print "make and make install in progress ..."
+    # read -n1 -p "Press any key to continue..."
+
+    make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details."
+    make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details."
 
     popd
 
@@ -747,7 +763,7 @@ function ffmpeg_build_Android() {
         CURRENT_ARCH="x86_64"
         PLATFORM_TRAIT=${PLATFORM_TRAIT}" --disable-programs"
     else
-        log_error_print "FFMPEG_CURRENT_ARCH=$FFMPEG_CURRENT_ARCH is error." && exit 1
+        log_error_print "FFMPEG_CURRENT_ARCH=$FFMPEG_CURRENT_ARCH is error."
     fi
 
     if [ "yes" = $ANDROID_ENABLE_STANDALONE_TOOLCHAIN ]; then
@@ -830,10 +846,11 @@ function ffmpeg_build_Android() {
     log_var_split_print "PKG_CONFIG=$PKG_CONFIG"
     log_var_split_print "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
 
-    CONFIGURE_FILE="${FFMPEG_SRC_DIR}/configure"
+    local CONFIGURE_FILE="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     # read -n1 -p "Press any key to continue..."
+    log_debug_print "$CONFIGURE_FILE in progress ..."
 
     pushd .
 
@@ -854,7 +871,7 @@ function ffmpeg_build_Android() {
         --pkg-config="${PKG_CONFIG}" \
         --extra-cflags="${CFLAGS}" \
         --extra-cxxflags="${CXXFLAGS}" \
-        --extra-ldflags="${LDFLAGS}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details." && exit 1
+        --extra-ldflags="${LDFLAGS}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     # sh $CONFIGURE_FILE \
     #     --prefix="${CONFIGURE_PARAMS_PREFIX}" \
@@ -873,8 +890,11 @@ function ffmpeg_build_Android() {
     #     --extra-cxxflags="${CXXFLAGS}" \
     #     --extra-ldflags="-Wl,--fix-cortex-a8" || exit 1
 
-    make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details." && exit 1
-    make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details." && exit 1
+    # read -n1 -p "Press any key to continue..."
+    log_debug_print "make and make install in progress ..."
+
+    make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details."
+    make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details."
 
     popd
 
@@ -906,11 +926,19 @@ function ffmpeg_build_all() {
                 FFMPEG_TMP_OS_XXX_DIR="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
                 FFMPEG_TMP_OS_XXX_OUTPUT_DIR="${FFMPEG_TMP_OS_XXX_DIR}/output"
                 FFMPEG_TMP_OS_XXX_TMP_DIR="${FFMPEG_TMP_OS_XXX_DIR}/tmp"
-                FFMPEG_TMP_OS_XXX_SRC_DIR="${FFMPEG_TMP_OS_XXX_DIR}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
+                FFMPEG_TMP_OS_XXX_SRC_DIR="${FFMPEG_SRC_DIR}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
 
                 FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
-                FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
-                FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
+                if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                    FFMPEG_XXX_VERSION=$FFMPEG_VERSION
+                    FFMPEG_XXX_URL=$FFMPEG_URL
+                else
+                    FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
+                    FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
+
+                    local XXX_BUILD_SCRIPT=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
+                    source $XXX_BUILD_SCRIPT || log_error_print "load script $XXX_BUILD_SCRIPT fail"
+                fi
 
                 mkdir -p ${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}
                 mkdir -p ${FFMPEG_TMP_OS_XXX_TMP_DIR}
@@ -925,8 +953,6 @@ function ffmpeg_build_all() {
                 log_var_split_print "FFMPEG_XXX_VERSION=$FFMPEG_XXX_VERSION"
                 log_var_split_print "FFMPEG_XXX_URL=$FFMPEG_XXX_URL"
 
-                read -n1 -p "key..."
-
                 for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_IOS[@]}; j++)); do
 
                     FFMPEG_CURRENT_ARCH=${FFMPEG_ALL_ARCH_ON_IOS[j]}
@@ -940,11 +966,19 @@ function ffmpeg_build_all() {
                     mkdir -p "${FFMPEG_TMP_OS_XXX_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
                     mkdir -p "${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
 
-                    ffmpeg_build_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                    if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                        ffmpeg_build_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                    else
+                        a=1
+                    fi
 
                 done
 
-                ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                    ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                else
+                    a=1
+                fi
 
                 log_info_print "ffmpeg_build_ios_library ${FFMPEG_ALL_BUILD_LIBRARY[k]} end..."
             done
@@ -962,8 +996,17 @@ function ffmpeg_build_all() {
                 FFMPEG_TMP_OS_XXX_SRC_DIR="${FFMPEG_TMP_OS_XXX_DIR}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
 
                 FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
-                FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
-                FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
+                FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
+                if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                    FFMPEG_XXX_VERSION=$FFMPEG_VERSION
+                    FFMPEG_XXX_URL=$FFMPEG_URL
+                else
+                    FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
+                    FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
+
+                    local XXX_BUILD_SCRIPT=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
+                    source $XXX_BUILD_SCRIPT || log_error_print "load script $XXX_BUILD_SCRIPT fail"
+                fi
 
                 mkdir -p ${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}
                 mkdir -p ${FFMPEG_TMP_OS_XXX_TMP_DIR}
@@ -991,9 +1034,19 @@ function ffmpeg_build_all() {
                     mkdir -p "${FFMPEG_TMP_OS_XXX_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
                     mkdir -p "${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
 
-                    ffmpeg_build_Android ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                    if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                        ffmpeg_build_Android ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                    else
+                        a=1
+                    fi
 
                 done
+
+                if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
+                    a=1
+                else
+                    a=1
+                fi
 
                 log_info_print "ffmpeg_build_android_library ${FFMPEG_ALL_BUILD_LIBRARY[k]} end..."
             done
