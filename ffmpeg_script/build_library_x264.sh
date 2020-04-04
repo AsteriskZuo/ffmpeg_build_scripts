@@ -36,6 +36,8 @@ echo "##########################################################################
 echo "#### Variable declarations partition                                      #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
+FFMPEG_XXX_FULL_NAME="${FFMPEG_XXX_NAME}-${FFMPEG_XXX_VERSION}"
+
 echo "###############################################################################" >/dev/null
 echo "#### Variable declarations partition on Android                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
@@ -52,9 +54,9 @@ function ffm_lib_clean_x264() {
     if test -d $FFMPEG_TMP_OS_XXX_OUTPUT_DIR; then
         rm -rf $FFMPEG_TMP_OS_XXX_OUTPUT_DIR
     fi
-    # if test -d $FFMPEG_TMP_OS_XXX_SRC_DIR; then
-    #     rm -rf $FFMPEG_TMP_OS_XXX_SRC_DIR
-    # fi
+    if test -d $FFMPEG_TMP_OS_XXX_SRC_DIR/$FFMPEG_XXX_FULL_NAME; then
+        rm -rf $FFMPEG_TMP_OS_XXX_SRC_DIR/$FFMPEG_XXX_FULL_NAME
+    fi
     log_info_print "ffm_lib_clean_x264 end..."
 }
 function ffm_lib_mkdir_x264() {
@@ -74,7 +76,6 @@ function ffm_lib_prerequisites_x264() {
     # 库的预处理部分：包括：安装依赖环境、下载源码等操作。
     log_info_print "ffm_lib_prerequisites_x264 start..."
 
-    FFMPEG_XXX_FULL_NAME="${FFMPEG_XXX_NAME}-${FFMPEG_XXX_VERSION}"
     local local_src_git="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_XXX_FULL_NAME}_git"
     local local_src=${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_XXX_FULL_NAME}
     if [ ! -r ${local_src_git} ]; then
@@ -95,9 +96,7 @@ function ffm_lib_prerequisites_x264() {
         fi
         pushd .
         cd ${local_src}
-        git checkout -b "stable" "origin/stable"
-        git pull
-        git checkout ${FFMPEG_XXX_VERSION}
+        git checkout -b ${FFMPEG_XXX_VERSION}
         popd
     fi
 
@@ -123,7 +122,7 @@ function ffm_lib_build_x264_ios() {
     local lv_other_options="--disable-cli --enable-static --enable-lto --enable-strip --enable-pic"
     local lv_host=""
     local lv_cc="xcrun -sdk ${lv_device_type} clang"
-    local lv_as="gas-preprocessor.pl -arch aarch64 -- $lv_cc"
+    local lv_as="ar"
 
     if [ "armv7" = ${FFMPEG_CURRENT_ARCH} ]; then
         lv_extra_cflags="$lv_extra_cflags -mios-version-min=$IOS_DEPLOYMENT_MIN_TARGET -fembed-bitcode"
@@ -131,7 +130,7 @@ function ffm_lib_build_x264_ios() {
         local lv_device_type="iPhoneOS"
         lv_device_type=$(echo ${lv_device_type} | tr '[:upper:]' '[:lower:]')
         lv_cc="xcrun -sdk ${lv_device_type} clang"
-        lv_as="gas-preprocessor.pl -- $lv_cc"
+        lv_as="gas-preprocessor.pl -arch arm -- $lv_cc"
     elif [ "arm64" = ${FFMPEG_CURRENT_ARCH} ]; then
         lv_extra_cflags="$lv_extra_cflags -mios-version-min=$IOS_DEPLOYMENT_MIN_TARGET -fembed-bitcode"
         lv_host="aarch64-apple-darwin"
@@ -145,7 +144,8 @@ function ffm_lib_build_x264_ios() {
         lv_device_type="iPhoneSimulator"
         lv_device_type=$(echo ${lv_device_type} | tr '[:upper:]' '[:lower:]')
         lv_cc="xcrun -sdk ${lv_device_type} clang"
-        lv_as="gas-preprocessor.pl -- $lv_cc"
+        lv_as="$lv_cc"
+        lv_platform_trait="--disable-asm"
     elif [ "x86_64" = ${FFMPEG_CURRENT_ARCH} ]; then
         lv_extra_cflags="${lv_extra_cflags} -mios-simulator-version-min=$IOS_DEPLOYMENT_MIN_TARGET"
         # Omit the lv_host assignment, the system will use config.guess to fill in automatically.
@@ -153,11 +153,16 @@ function ffm_lib_build_x264_ios() {
         lv_device_type="iPhoneSimulator"
         lv_device_type=$(echo ${lv_device_type} | tr '[:upper:]' '[:lower:]')
         lv_cc="xcrun -sdk ${lv_device_type} clang"
-        lv_as="gas-preprocessor.pl -- $lv_cc"
+        lv_as="$lv_cc"
+        lv_platform_trait="--disable-asm"
     fi
 
     lv_extra_asflags=$lv_extra_cflags
     lv_extra_ldflags=$lv_extra_cflags
+    lv_other_options="$lv_other_options $lv_platform_trait"
+
+    log_var_split_print "lv_cc=$lv_cc"
+    log_var_split_print "lv_as=$lv_as"
 
     log_var_split_print "lv_platform_trait=$lv_platform_trait"
     log_var_split_print "lv_device_type=$lv_device_type"
@@ -170,7 +175,7 @@ function ffm_lib_build_x264_ios() {
     log_var_split_print "lv_other_options=$lv_other_options"
     log_var_split_print "lv_host=$lv_host"
 
-    local lv_configure_file="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_XXX_FULL_NAME}}/configure"
+    local lv_configure_file="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_XXX_FULL_NAME}/configure"
     log_var_split_print "lv_configure_file=$lv_configure_file"
 
     log_debug_print "$lv_configure_file in progress ..."
@@ -181,15 +186,15 @@ function ffm_lib_build_x264_ios() {
     cd ${lv_tmp_dir}
 
     export CC=$lv_cc
-    export AS=$lv_as
+    # export -n AS
 
     sh $lv_configure_file \
-        --prefix="${lv_prefix}" \
-        --host="${lv_host}" \
-        --extra-asflags="${lv_extra_asflags}" \
+        --prefix=${lv_prefix} \
+        --host=${lv_host} \
+        ${lv_other_options} \
         --extra-cflags="${lv_extra_cflags}" \
-        --extra-ldflags="${lv_extra_ldflags}" \
-        "${lv_other_options}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
+        --extra-asflags="${lv_extra_asflags}" \
+        --extra-ldflags="${lv_extra_ldflags}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     log_debug_print "make and make install in progress ..."
     read -n1 -p "Press any key to continue..."
@@ -207,6 +212,7 @@ function ffm_lib_build_x264_android() {
 
     local lv_tmp_dir="${FFMPEG_TMP_OS_XXX_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
     local lv_output_dir="${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
+    local lv_platform_trait=""
 
     # local variable
     local lv_prefix=$lv_output_dir
@@ -225,9 +231,6 @@ function ffm_lib_build_x264_android() {
     local CURRENT_ARCH=""
     local CURRENT_TRIPLE_armv7a=""
     local CURRENT_CPU=""
-
-    local PKG_CONFIG="$(which pkg-config)"
-    local PLATFORM_TRAIT=""
 
     # ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
     # ANDROID_ABIS=("armeabi-v7a" "arm64-v8a" "x86" "x86_64")
@@ -254,14 +257,12 @@ function ffm_lib_build_x264_android() {
         ANDROID_CURRENT_MARCH=${ANDROID_MARCHS[0]}
         CURRENT_CPU="cortex-a8"
         CURRENT_ARCH="arm"
-        PLATFORM_TRAIT=${PLATFORM_TRAIT}" --enable-neon"
     elif [ "arm64-v8a" = ${FFMPEG_CURRENT_ARCH} ]; then
         ANDROID_CURRENT_TRIPLE=${ANDROID_ABI_TRIPLES[1]}
         CURRENT_TRIPLE_armv7a=$ANDROID_CURRENT_TRIPLE
         ANDROID_CURRENT_ABI=${ANDROID_ABIS[1]}
         ANDROID_CURRENT_MARCH=${ANDROID_MARCHS[1]}
         CURRENT_ARCH="aarch64"
-        PLATFORM_TRAIT=${PLATFORM_TRAIT}" --enable-neon"
     elif [ "x86" = ${FFMPEG_CURRENT_ARCH} ]; then
         CURRENT_ARCH_FLAGS="-march=i686 -mtune=intel -msse3 -mfpmath=sse -m32"
         ANDROID_CURRENT_TRIPLE=${ANDROID_ABI_TRIPLES[2]}
@@ -269,7 +270,7 @@ function ffm_lib_build_x264_android() {
         ANDROID_CURRENT_ABI=${ANDROID_ABIS[2]}
         ANDROID_CURRENT_MARCH=${ANDROID_MARCHS[2]}
         CURRENT_ARCH="x86"
-        PLATFORM_TRAIT=${PLATFORM_TRAIT}" --enable-x86asm --disable-programs"
+        lv_platform_trait="--disable-asm"
     elif [ "x86_64" = ${FFMPEG_CURRENT_ARCH} ]; then
         CURRENT_ARCH_FLAGS="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
         ANDROID_CURRENT_TRIPLE=${ANDROID_ABI_TRIPLES[3]}
@@ -277,7 +278,7 @@ function ffm_lib_build_x264_android() {
         ANDROID_CURRENT_ABI=${ANDROID_ABIS[3]}
         ANDROID_CURRENT_MARCH=${ANDROID_MARCHS[3]}
         CURRENT_ARCH="x86_64"
-        PLATFORM_TRAIT=${PLATFORM_TRAIT}" --disable-programs"
+        lv_platform_trait="--disable-asm"
     else
         log_error_print "FFMPEG_CURRENT_ARCH=$FFMPEG_CURRENT_ARCH is error."
     fi
@@ -325,9 +326,9 @@ function ffm_lib_build_x264_android() {
         export RANLIB=${ANDROID_CURRENT_TOOLCHAIN_DIR}/bin/${CURRENT_TRIPLE_armv7a}-ranlib
     fi
 
-    local CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
-    local CONFIGURE_PARAMS_TARGET_OS="android"
-    local CONFIGURE_PARAMS_SYSROOT=""
+    export AS=$CC
+    # export LD=$CC
+    # export -n AS
 
     log_var_split_print "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
     log_var_split_print "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
@@ -354,14 +355,8 @@ function ffm_lib_build_x264_android() {
 
     log_var_split_print "TMP_DIR=$TMP_DIR"
     log_var_split_print "OUTPUT_DIR=$OUTPUT_DIR"
-    log_var_split_print "CONFIGURE_PARAMS_PREFIX=$CONFIGURE_PARAMS_PREFIX"
 
-    log_var_split_print "CONFIGURE_PARAMS_TARGET_OS=$CONFIGURE_PARAMS_TARGET_OS"
-    log_var_split_print "CONFIGURE_PARAMS_SYSROOT=$CONFIGURE_PARAMS_SYSROOT"
-
-    log_var_split_print "PKG_CONFIG=$PKG_CONFIG"
-    log_var_split_print "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
-
+    lv_other_options="${lv_other_options} ${lv_platform_trait}"
     lv_host=$CURRENT_TRIPLE_armv7a
     lv_extra_cflags=$CFLAGS
     lv_extra_asflags=$lv_extra_cflags
@@ -375,7 +370,7 @@ function ffm_lib_build_x264_android() {
     log_var_split_print "lv_other_options=$lv_other_options"
     log_var_split_print "lv_host=$lv_host"
 
-    local lv_configure_file="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_XXX_FULL_NAME}}/configure"
+    local lv_configure_file="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_XXX_FULL_NAME}/configure"
     log_var_split_print "lv_configure_file=$lv_configure_file"
 
     log_debug_print "$lv_configure_file in progress ..."
@@ -386,12 +381,12 @@ function ffm_lib_build_x264_android() {
     cd ${lv_tmp_dir}
 
     sh $lv_configure_file \
-        --prefix="${lv_prefix}" \
-        --host="${lv_host}" \
-        --extra-asflags="${lv_extra_asflags}" \
+        --prefix=${lv_prefix} \
+        --host=${lv_host} \
+        ${lv_other_options} \
         --extra-cflags="${lv_extra_cflags}" \
-        --extra-ldflags="${lv_extra_ldflags}" \
-        "${lv_other_options}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
+        --extra-asflags="${lv_extra_asflags}" \
+        --extra-ldflags="${lv_extra_ldflags}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     log_debug_print "make and make install in progress ..."
     read -n1 -p "Press any key to continue..."
@@ -419,10 +414,10 @@ echo "#### Process control partition                                            
 echo "###############################################################################" >/dev/null
 
 # function ffm_lib_x264_ios_auto() {
-    
+
 # }
 # function ffm_lib_x264_android_auto() {
-    
+
 # }
 
 echo "###############################################################################" >/dev/null

@@ -81,7 +81,6 @@ export FFMPEG_SRC_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_src"
 export FFMPEG_TMP_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_tmp"
 export FFMPEG_TOOL_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_tool"
 export FFMPEG_TEST_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_test"
-export FFMPEG_SRC_XXX_DIR="${FFMPEG_SRC_DIR}/${FFMPEG_NAME}"
 
 export FFMPEG_CURRENT_DIR=""
 
@@ -108,7 +107,7 @@ echo "##########################################################################
 echo "#### Variable declarations partition on Android                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export ANDROID_NDK_DIR="/Users/zuoyu/Library/Android/sdk/ndk-bundle"
+export ANDROID_NDK_DIR="/Users/asteriskzuo/Library/Android/sdk/ndk-bundle"
 export ANDROID_HOST_TAG="darwin-x86_64"
 export ANDROID_TOOLCHAIN_DIR="$ANDROID_NDK_DIR/toolchains/llvm/prebuilt/$ANDROID_HOST_TAG"
 export ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")

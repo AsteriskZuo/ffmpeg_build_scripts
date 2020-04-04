@@ -188,7 +188,6 @@ log_var_split_print "FFMPEG_SRC_DIR=$FFMPEG_SRC_DIR"
 log_var_split_print "FFMPEG_TMP_DIR=$FFMPEG_TMP_DIR"
 log_var_split_print "FFMPEG_TOOL_DIR=$FFMPEG_TOOL_DIR"
 log_var_split_print "FFMPEG_TEST_DIR=$FFMPEG_TEST_DIR"
-log_var_split_print "FFMPEG_SRC_XXX_DIR=$FFMPEG_SRC_XXX_DIR"
 
 log_var_split_print "FFMPEG_CURRENT_DIR=$FFMPEG_CURRENT_DIR"
 
@@ -660,7 +659,7 @@ function ffmpeg_build_iOS() {
 
     # sh -x "./configure" ${CONFIGURE_PARAMS}
 
-    local CONFIGURE_FILE="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_FULL_NAME}/configure"
+    local CONFIGURE_FILE="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     log_debug_print "$CONFIGURE_FILE in progress ..."
@@ -865,7 +864,7 @@ function ffmpeg_build_Android() {
     log_var_split_print "PKG_CONFIG=$PKG_CONFIG"
     log_var_split_print "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
 
-    local CONFIGURE_FILE="${FFMPEG_SRC_XXX_DIR}/${FFMPEG_FULL_NAME}/configure"
+    local CONFIGURE_FILE="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
     # read -n1 -p "Press any key to continue..."
@@ -997,7 +996,7 @@ function ffmpeg_build_all() {
                     eval $XXX_PREREQUISTITES_FUNCTION
                 fi
 
-                read -n1 -p "key..."
+                # read -n1 -p "key..."
 
                 for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_IOS[@]}; j++)); do
 
@@ -1018,7 +1017,7 @@ function ffmpeg_build_all() {
                         eval $XXX_BUILD_FUNCTION ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     fi
 
-                    read -n1 -p "key..."
+                    # read -n1 -p "key..."
 
                 done
 
@@ -1038,7 +1037,7 @@ function ffmpeg_build_all() {
                 FFMPEG_TMP_OS_XXX_DIR="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
                 FFMPEG_TMP_OS_XXX_OUTPUT_DIR="${FFMPEG_TMP_OS_XXX_DIR}/output"
                 FFMPEG_TMP_OS_XXX_TMP_DIR="${FFMPEG_TMP_OS_XXX_DIR}/tmp"
-                FFMPEG_TMP_OS_XXX_SRC_DIR="${FFMPEG_TMP_OS_XXX_DIR}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
+                FFMPEG_TMP_OS_XXX_SRC_DIR="${FFMPEG_SRC_DIR}/${FFMPEG_ALL_BUILD_LIBRARY[k]}"
                 FFMPEG_TMP_OS_XXX_INCLUDE_DIR="${FFMPEG_TMP_OS_XXX_DIR}/include"
 
                 log_var_split_print "FFMPEG_TMP_OS_XXX_DIR=$FFMPEG_TMP_OS_XXX_DIR"
@@ -1091,7 +1090,7 @@ function ffmpeg_build_all() {
                     eval $XXX_PREREQUISTITES_FUNCTION
                 fi
 
-                read -n1 -p "key..."
+                # read -n1 -p "key..."
 
                 for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_ANDROID[@]}; j++)); do
 
@@ -1109,10 +1108,10 @@ function ffmpeg_build_all() {
                     if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
                         ffmpeg_build_Android ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     else
-                        XXX_BUILD_FUNCTION ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                        eval $XXX_BUILD_FUNCTION ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     fi
 
-                    read -n1 -p "key..."
+                    # read -n1 -p "key..."
 
                 done
 
@@ -1122,7 +1121,7 @@ function ffmpeg_build_all() {
                     a=1
                 fi
 
-                read -n1 -p "key..."
+                # read -n1 -p "key..."
 
                 log_info_print "ffmpeg_build_android_library ${FFMPEG_ALL_BUILD_LIBRARY[k]} end..."
             done
