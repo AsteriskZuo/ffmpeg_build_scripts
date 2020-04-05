@@ -188,6 +188,7 @@ log_var_split_print "FFMPEG_SRC_DIR=$FFMPEG_SRC_DIR"
 log_var_split_print "FFMPEG_TMP_DIR=$FFMPEG_TMP_DIR"
 log_var_split_print "FFMPEG_TOOL_DIR=$FFMPEG_TOOL_DIR"
 log_var_split_print "FFMPEG_TEST_DIR=$FFMPEG_TEST_DIR"
+log_var_split_print "FFMPEG_OUTPUT_DIR=$FFMPEG_OUTPUT_DIR"
 
 log_var_split_print "FFMPEG_CURRENT_DIR=$FFMPEG_CURRENT_DIR"
 
@@ -316,6 +317,7 @@ if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_xz_enable ]; then FFMPEG_ALL_BUILD_LIBRARY
 if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_openssl_enable ]; then FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_EXTERNAL_LIBRARY_openssl; fi
 
 FFMPEG_ALL_BUILD_LIBRARY=("x264")
+FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_NAME
 log_var_split_print "FFMPEG_ALL_BUILD_LIBRARY=${FFMPEG_ALL_BUILD_LIBRARY[@]}"
 
 read -n1 -p "Confirm parameters, press any key to continue, otherwise CTRL + C terminates..."
@@ -527,39 +529,29 @@ function ffmpeg_lipo_iOS() {
     log_info_print "ffmpeg_lipo_iOS start..."
     log_info_print "ffmpeg_lipo_iOS param_count=" $# "param_content=" $@
 
-    local FROM_LIBRARY_DIR=${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}
-    local TO_LIBRARY_DIR=${FFMPEG_TMP_OS_LIPO_DIR}
+    local lv_source_lib_dir=${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}
+    local lv_target_lib_dir=${FFMPEG_TMP_OS_LIPO_DIR}/${FFMPEG_XXX_NAME}
 
-    log_var_split_print "FROM_LIBRARY_DIR=$FROM_LIBRARY_DIR"
-    log_var_split_print "TO_LIBRARY_DIR=$TO_LIBRARY_DIR"
+    rm -rf $lv_target_lib_dir
+    mkdir -p $lv_target_lib_dir
 
-    local LIBRARY_LIST=$(find ${FROM_LIBRARY_DIR}/${FFMPEG_ALL_ARCH_ON_IOS[0]} -name "*.a" | sed "s/^.*\///g")
+    log_var_split_print "lv_source_lib_dir=$lv_source_lib_dir"
+    log_var_split_print "lv_target_lib_dir=$lv_target_lib_dir"
 
-    log_var_split_print "LIBRARY_LIST=${LIBRARY_LIST[@]}"
+    if [ 0 -lt ${#FFMPEG_ALL_ARCH_ON_IOS[@]} ]; then
 
-    for LIBRARY_FILE in ${LIBRARY_LIST[@]}; do
-        log_var_split_print "LIBRARY_FILE=$LIBRARY_FILE"
-        lipo -create $(find $FROM_LIBRARY_DIR -name $LIBRARY_FILE) -output $TO_LIBRARY_DIR/$LIBRARY_FILE || log_error_print "lipo fail."
-    done
+        local lv_lib_list=$(find ${lv_source_lib_dir}/${FFMPEG_ALL_ARCH_ON_IOS[0]} -name "*.a" | sed "s/^.*\///g")
 
-    log_info_print "ffmpeg_lipo_iOS end..."
-}
-function ffmpeg_include_iOS() {
-    log_info_print "ffmpeg_include_iOS start..."
-    log_info_print "ffmpeg_include_iOS param_count=" $# "param_content=" $@
+        log_var_split_print "lv_lib_list=${lv_lib_list[@]}"
 
-    local lv_include_dir="${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}/${FFMPEG_ALL_ARCH_ON_IOS[0]}/include"
-    if [ -d $lv_include_dir ]; then
-        local lv_target_dir="${FFMPEG_TMP_OS_XXX_INCLUDE_DIR}/${FFMPEG_XXX_NAME}"
-        mkdir -p $lv_target_dir
-        local cp_success="yes"
-        cp -f -R $lv_include_dir $lv_target_dir || cp_success="no"
-        if [ "no" = cp_success ]; then
-            log_error_print "${FFMPEG_XXX_NAME} include copy fail." && rm -rf ${lv_target_dir}
-        fi
+        for lv_lib_item in ${lv_lib_list[@]}; do
+            log_var_split_print "lv_lib_item=$lv_lib_item"
+            lipo -create $(find $lv_source_lib_dir -name $lv_lib_item) -output $lv_target_lib_dir/$lv_lib_item || log_error_print "lipo fail."
+        done
+
     fi
 
-    log_info_print "ffmpeg_include_iOS end..."
+    log_info_print "ffmpeg_lipo_iOS end..."
 }
 
 function ffmpeg_build_iOS() {
@@ -711,6 +703,12 @@ function ffmpeg_build_iOS() {
     popd
 
     log_info_print "ffmpeg_build_iOS end..."
+}
+
+function ffmpeg_lipo_Android() {
+    log_var_split_print "ffmpeg_lipo_Android start..."
+    log_info_print "ffmpeg_lipo_Android param_count=" $# "param_content=" $@
+    log_var_split_print "ffmpeg_lipo_Android end..."
 }
 
 function ffmpeg_build_Android() {
@@ -957,10 +955,10 @@ function ffmpeg_build_all() {
                 mkdir -p ${FFMPEG_TMP_OS_XXX_SRC_DIR}
                 mkdir -p ${FFMPEG_TMP_OS_XXX_INCLUDE_DIR}
 
-                local XXX_CLEAN_FUNCTION=""
-                local XXX_MKDIR_FUNCTION=""
-                local XXX_PREREQUISTITES_FUNCTION=""
-                local XXX_BUILD_FUNCTION=""
+                local xxx_clean_function=""
+                local xxx_mkdir_function=""
+                local xxx_prerequistites_function=""
+                local xxx_build_function=""
 
                 FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
                 if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
@@ -970,33 +968,31 @@ function ffmpeg_build_all() {
                     FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
                     FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
 
-                    local XXX_BUILD_SCRIPT=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
-                    source $XXX_BUILD_SCRIPT || log_error_print "load script $XXX_BUILD_SCRIPT fail"
+                    local xxx_build_script=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
+                    source $xxx_build_script || log_error_print "load script $xxx_build_script fail"
 
-                    XXX_CLEAN_FUNCTION="ffm_lib_clean_${FFMPEG_XXX_NAME}"
-                    XXX_MKDIR_FUNCTION="ffm_lib_mkdir_${FFMPEG_XXX_NAME}"
-                    XXX_PREREQUISTITES_FUNCTION="ffm_lib_prerequisites_${FFMPEG_XXX_NAME}"
-                    XXX_BUILD_FUNCTION="ffm_lib_build_${FFMPEG_XXX_NAME}_ios"
+                    xxx_clean_function="ffm_lib_clean_${FFMPEG_XXX_NAME}"
+                    xxx_mkdir_function="ffm_lib_mkdir_${FFMPEG_XXX_NAME}"
+                    xxx_prerequistites_function="ffm_lib_prerequisites_${FFMPEG_XXX_NAME}"
+                    xxx_build_function="ffm_lib_build_${FFMPEG_XXX_NAME}_ios"
                 fi
 
                 log_var_split_print "FFMPEG_XXX_NAME=$FFMPEG_XXX_NAME"
                 log_var_split_print "FFMPEG_XXX_VERSION=$FFMPEG_XXX_VERSION"
                 log_var_split_print "FFMPEG_XXX_URL=$FFMPEG_XXX_URL"
 
-                log_var_split_print "XXX_CLEAN_FUNCTION=$XXX_CLEAN_FUNCTION"
-                log_var_split_print "XXX_MKDIR_FUNCTION=$XXX_MKDIR_FUNCTION"
-                log_var_split_print "XXX_PREREQUISTITES_FUNCTION=$XXX_PREREQUISTITES_FUNCTION"
-                log_var_split_print "XXX_BUILD_FUNCTION=$XXX_BUILD_FUNCTION"
+                log_var_split_print "xxx_clean_function=$xxx_clean_function"
+                log_var_split_print "xxx_mkdir_function=$xxx_mkdir_function"
+                log_var_split_print "xxx_prerequistites_function=$xxx_prerequistites_function"
+                log_var_split_print "xxx_build_function=$xxx_build_function"
 
                 if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
                     a=1
                 else
-                    eval $XXX_CLEAN_FUNCTION
-                    eval $XXX_MKDIR_FUNCTION
-                    eval $XXX_PREREQUISTITES_FUNCTION
+                    eval $xxx_clean_function
+                    eval $xxx_mkdir_function
+                    eval $xxx_prerequistites_function
                 fi
-
-                # read -n1 -p "key..."
 
                 for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_IOS[@]}; j++)); do
 
@@ -1014,15 +1010,12 @@ function ffmpeg_build_all() {
                     if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
                         ffmpeg_build_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     else
-                        eval $XXX_BUILD_FUNCTION ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                        eval $xxx_build_function ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     fi
-
-                    # read -n1 -p "key..."
 
                 done
 
                 ffmpeg_lipo_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
-                ffmpeg_include_iOS ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
 
                 log_info_print "ffmpeg_build_ios_library ${FFMPEG_ALL_BUILD_LIBRARY[k]} end..."
             done
@@ -1050,10 +1043,10 @@ function ffmpeg_build_all() {
                 mkdir -p ${FFMPEG_TMP_OS_XXX_SRC_DIR}
                 mkdir -p ${FFMPEG_TMP_OS_XXX_INCLUDE_DIR}
 
-                local XXX_CLEAN_FUNCTION=""
-                local XXX_MKDIR_FUNCTION=""
-                local XXX_PREREQUISTITES_FUNCTION=""
-                local XXX_BUILD_FUNCTION=""
+                local xxx_clean_function=""
+                local xxx_mkdir_function=""
+                local xxx_prerequistites_function=""
+                local xxx_build_function=""
 
                 FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
                 FFMPEG_XXX_NAME="${FFMPEG_ALL_BUILD_LIBRARY[k]}"
@@ -1064,33 +1057,31 @@ function ffmpeg_build_all() {
                     FFMPEG_XXX_VERSION=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_version")
                     FFMPEG_XXX_URL=$(eval echo '$'"FFMPEG_EXTERNAL_LIBRARY_${FFMPEG_XXX_NAME}_url")
 
-                    local XXX_BUILD_SCRIPT=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
-                    source $XXX_BUILD_SCRIPT || log_error_print "load script $XXX_BUILD_SCRIPT fail"
+                    local xxx_build_script=${FFMPEG_SH_SUB_DIR}/build_library_${FFMPEG_XXX_NAME}.sh
+                    source $xxx_build_script || log_error_print "load script $xxx_build_script fail"
 
-                    XXX_CLEAN_FUNCTION="ffm_lib_clean_${FFMPEG_XXX_NAME}"
-                    XXX_MKDIR_FUNCTION="ffm_lib_mkdir_${FFMPEG_XXX_NAME}"
-                    XXX_PREREQUISTITES_FUNCTION="ffm_lib_prerequisites_${FFMPEG_XXX_NAME}"
-                    XXX_BUILD_FUNCTION="ffm_lib_build_${FFMPEG_XXX_NAME}_android"
+                    xxx_clean_function="ffm_lib_clean_${FFMPEG_XXX_NAME}"
+                    xxx_mkdir_function="ffm_lib_mkdir_${FFMPEG_XXX_NAME}"
+                    xxx_prerequistites_function="ffm_lib_prerequisites_${FFMPEG_XXX_NAME}"
+                    xxx_build_function="ffm_lib_build_${FFMPEG_XXX_NAME}_android"
                 fi
 
                 log_var_split_print "FFMPEG_XXX_NAME=$FFMPEG_XXX_NAME"
                 log_var_split_print "FFMPEG_XXX_VERSION=$FFMPEG_XXX_VERSION"
                 log_var_split_print "FFMPEG_XXX_URL=$FFMPEG_XXX_URL"
 
-                log_var_split_print "XXX_CLEAN_FUNCTION=$XXX_CLEAN_FUNCTION"
-                log_var_split_print "XXX_MKDIR_FUNCTION=$XXX_MKDIR_FUNCTION"
-                log_var_split_print "XXX_PREREQUISTITES_FUNCTION=$XXX_PREREQUISTITES_FUNCTION"
-                log_var_split_print "XXX_BUILD_FUNCTION=$XXX_BUILD_FUNCTION"
+                log_var_split_print "xxx_clean_function=$xxx_clean_function"
+                log_var_split_print "xxx_mkdir_function=$xxx_mkdir_function"
+                log_var_split_print "xxx_prerequistites_function=$xxx_prerequistites_function"
+                log_var_split_print "xxx_build_function=$xxx_build_function"
 
                 if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
                     a=1
                 else
-                    eval $XXX_CLEAN_FUNCTION
-                    eval $XXX_MKDIR_FUNCTION
-                    eval $XXX_PREREQUISTITES_FUNCTION
+                    eval $xxx_clean_function
+                    eval $xxx_mkdir_function
+                    eval $xxx_prerequistites_function
                 fi
-
-                # read -n1 -p "key..."
 
                 for ((j = 0; j < ${#FFMPEG_ALL_ARCH_ON_ANDROID[@]}; j++)); do
 
@@ -1108,20 +1099,12 @@ function ffmpeg_build_all() {
                     if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
                         ffmpeg_build_Android ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     else
-                        eval $XXX_BUILD_FUNCTION ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                        eval $xxx_build_function ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_CURRENT_ARCH} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
                     fi
-
-                    # read -n1 -p "key..."
 
                 done
 
-                if [ "ffmpeg" = $FFMPEG_XXX_NAME ]; then
-                    a=1
-                else
-                    a=1
-                fi
-
-                # read -n1 -p "key..."
+                ffmpeg_lipo_Android ${FFMPEG_CURRENT_TARGET_OS} ${FFMPEG_ALL_BUILD_LIBRARY[k]}
 
                 log_info_print "ffmpeg_build_android_library ${FFMPEG_ALL_BUILD_LIBRARY[k]} end..."
             done
@@ -1134,14 +1117,111 @@ function ffmpeg_build_all() {
     log_info_print "ffmpeg_build_all end..."
 }
 
+function ffmpeg_generate_result() {
+    log_info_print "ffmpeg_generate_result start..."
+
+    # 1.iOS
+    #   1.copy include
+    #   2.copy static library
+    # 2.Android
+    #   1.copy include
+    #   2.copy static and dynamic library
+
+    local lv_target_include_dir=""
+    local lv_target_lib_dir=""
+
+    for ((i = 0; i < ${#FFMPEG_ALL_TARGET_OS[@]}; i++)); do
+
+        local lv_target_os=${FFMPEG_ALL_TARGET_OS[i]}
+
+        lv_target_include_dir="${FFMPEG_OUTPUT_DIR}/${lv_target_os}/include"
+        lv_target_lib_dir="${FFMPEG_OUTPUT_DIR}/${lv_target_os}/lib"
+
+        log_var_split_print "lv_target_include_dir=$lv_target_include_dir"
+        log_var_split_print "lv_target_lib_dir=$lv_target_lib_dir"
+
+        rm -rf $lv_target_lib_dir
+
+        mkdir -p $lv_target_include_dir
+        mkdir -p $lv_target_lib_dir
+
+        if [ "iOS" = $lv_target_os ]; then
+
+            for ((k = 0; k < ${#FFMPEG_ALL_BUILD_LIBRARY[@]}; k++)); do
+
+                local lv_xxx=${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                local lv_source_lib_dir="${FFMPEG_TMP_DIR}/${lv_target_os}/lipo/${lv_xxx}"
+                local lv_xxx_target_include_dir="$lv_target_include_dir/$lv_xxx"
+                local lv_xxx_output_dir="${FFMPEG_TMP_DIR}/${lv_target_os}/${FFMPEG_ALL_BUILD_LIBRARY[k]}/output"
+                local lv_os_arch_list=($(ls $lv_xxx_output_dir))
+
+                log_var_split_print "lv_xxx=$lv_xxx"
+                log_var_split_print "lv_source_lib_dir=$lv_source_lib_dir"
+                log_var_split_print "lv_xxx_target_include_dir=$lv_xxx_target_include_dir"
+                log_var_split_print "lv_xxx_output_dir=$lv_xxx_output_dir"
+                log_var_split_print "lv_os_arch_list=${lv_os_arch_list[@]}"
+
+                cp -f -R $lv_source_lib_dir $lv_target_lib_dir
+
+                rm -rf $lv_xxx_target_include_dir
+                mkdir -p $lv_xxx_target_include_dir
+
+                if [ 0 -lt ${#lv_os_arch_list[@]} ]; then
+                    local lv_xxx_source_include_dir="$lv_xxx_output_dir/${lv_os_arch_list[0]}/include"
+                    log_var_split_print "lv_xxx_source_include_dir=$lv_xxx_source_include_dir"
+                    cp -f -R $lv_xxx_source_include_dir $lv_xxx_target_include_dir
+                fi
+
+            done
+
+        elif
+
+            [ "Android" = $lv_target_os ]
+        then
+
+            for ((k = 0; k < ${#FFMPEG_ALL_BUILD_LIBRARY[@]}; k++)); do
+
+                local lv_xxx=${FFMPEG_ALL_BUILD_LIBRARY[k]}
+                local lv_source_lib_dir="${FFMPEG_TMP_DIR}/${lv_target_os}/lipo/${lv_xxx}"
+                local lv_xxx_target_include_dir="$lv_target_include_dir/$lv_xxx"
+                local lv_xxx_output_dir="${FFMPEG_TMP_DIR}/${lv_target_os}/${FFMPEG_ALL_BUILD_LIBRARY[k]}/output"
+                local lv_os_arch_list=($(ls $lv_xxx_output_dir))
+
+                log_var_split_print "lv_xxx=$lv_xxx"
+                log_var_split_print "lv_source_lib_dir=$lv_source_lib_dir"
+                log_var_split_print "lv_xxx_target_include_dir=$lv_xxx_target_include_dir"
+                log_var_split_print "lv_xxx_output_dir=$lv_xxx_output_dir"
+                log_var_split_print "lv_os_arch_list=${lv_os_arch_list[@]}"
+
+                cp -f -R $lv_source_lib_dir $lv_target_lib_dir
+
+                rm -rf $lv_xxx_target_include_dir
+                mkdir -p $lv_xxx_target_include_dir
+
+                if [ 0 -lt ${#lv_os_arch_list[@]} ]; then
+                    local lv_xxx_source_include_dir="$lv_xxx_output_dir/${lv_os_arch_list[0]}/include"
+                    log_var_split_print "lv_xxx_source_include_dir=$lv_xxx_source_include_dir"
+                    cp -f -R $lv_xxx_source_include_dir $lv_xxx_target_include_dir
+                fi
+
+            done
+
+        fi
+
+    done
+
+    log_info_print "ffmpeg_generate_result end..."
+}
+
 log_head_print "###############################################################################"
 log_head_print "#### Process control partition                                            #####"
 log_head_print "###############################################################################"
 
-ffmpeg_clean
-ffmpeg_mkdir
-ffmpeg_prerequisites
-ffmpeg_build_all
+# ffmpeg_clean
+# ffmpeg_mkdir
+# ffmpeg_prerequisites
+# ffmpeg_build_all
+# ffmpeg_generate_result
 
 # function ffmpeg_break() {
 

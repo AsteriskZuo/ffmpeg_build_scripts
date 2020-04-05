@@ -81,6 +81,7 @@ export FFMPEG_SRC_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_src"
 export FFMPEG_TMP_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_tmp"
 export FFMPEG_TOOL_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_tool"
 export FFMPEG_TEST_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_test"
+export FFMPEG_OUTPUT_DIR="${FFMPEG_ROOT_DIR}/ffmpeg_output"
 
 export FFMPEG_CURRENT_DIR=""
 

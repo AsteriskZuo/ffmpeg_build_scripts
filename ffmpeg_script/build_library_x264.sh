@@ -96,11 +96,9 @@ function ffm_lib_prerequisites_x264() {
         fi
         pushd .
         cd ${local_src}
-        git checkout -b ${FFMPEG_XXX_VERSION}
+        git checkout -b ${FFMPEG_XXX_VERSION} >/dev/null || log_error_print "change commit fail"
         popd
     fi
-
-    read -n1 -p "key..."
 
     log_info_print "ffm_lib_prerequisites_x264 end..."
 }
@@ -179,7 +177,7 @@ function ffm_lib_build_x264_ios() {
     log_var_split_print "lv_configure_file=$lv_configure_file"
 
     log_debug_print "$lv_configure_file in progress ..."
-    read -n1 -p "Press any key to continue..."
+    # read -n1 -p "Press any key to continue..."
 
     pushd .
 
@@ -197,7 +195,7 @@ function ffm_lib_build_x264_ios() {
         --extra-ldflags="${lv_extra_ldflags}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     log_debug_print "make and make install in progress ..."
-    read -n1 -p "Press any key to continue..."
+    # read -n1 -p "Press any key to continue..."
 
     make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details."
     make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details."
@@ -220,7 +218,7 @@ function ffm_lib_build_x264_android() {
     local lv_extra_cflags="-arch ${FFMPEG_CURRENT_ARCH} -std=c11"
     local lv_extra_ldflags=""
     local lv_extra_rcflags=""
-    local lv_other_options="--disable-cli --enable-static --enable-lto --enable-strip --enable-pic"
+    local lv_other_options="--disable-cli --enable-static --enable-shared --enable-lto --enable-strip --enable-pic"
     local lv_host=""
 
     # common variable
@@ -374,7 +372,7 @@ function ffm_lib_build_x264_android() {
     log_var_split_print "lv_configure_file=$lv_configure_file"
 
     log_debug_print "$lv_configure_file in progress ..."
-    read -n1 -p "Press any key to continue..."
+    # read -n1 -p "Press any key to continue..."
 
     pushd .
 
@@ -389,7 +387,7 @@ function ffm_lib_build_x264_android() {
         --extra-ldflags="${lv_extra_ldflags}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     log_debug_print "make and make install in progress ..."
-    read -n1 -p "Press any key to continue..."
+    # read -n1 -p "Press any key to continue..."
 
     make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details."
     make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details."
@@ -431,5 +429,5 @@ echo "##########################################################################
 # ffm_lib_build_xxx
 # ffm_lib_lipo_xxx
 
-echo ""
-read -n1 -p "Press any key to continue..."
+# echo ""
+# read -n1 -p "Press any key to continue..."

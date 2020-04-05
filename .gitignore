@@ -6,4 +6,5 @@ ffmpeg_android/
 ffmpeg_tmp*/
 ffmpeg_src/
 ffmpeg_tool/
+ffmpeg_output/
 ffmpeg-*
