@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ../color_log.sh
+source ./color_log.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -26,6 +26,7 @@ echo "# Url: https://www.cnblogs.com/lmx1002/p/10132656.html                    
 echo "# Url: https://blog.csdn.net/panfengzjz/article/details/81865925              #" >/dev/null
 echo "# Url: http://www.voidcn.com/article/p-qpmevtxb-btr.html                      #" >/dev/null
 echo "# Url: https://cloud.tencent.com/developer/ask/151529                         #" >/dev/null
+echo "# Url: https://www.cnblogs.com/John-2011/p/9282812.html                       #" >/dev/null
 echo "###############################################################################" >/dev/null
 
 echo "###############################################################################" >/dev/null
@@ -484,16 +485,43 @@ function test_var_var() {
     var_var_1=var_1
     echo $var_var_1
 }
-# set -v
-# set -x
-# ls -la
 
-# 显示执行命令所在行的行号
-# set -x
-# PS4=':${LINENO}+'
-# ls -la
-# ls -la
+function test_current_time() {
+    starttime=$(date +%Y-%m-%d\ %H:%M:%S)
+    echo $starttime
+    echo $(date +%Y-%m-%d\ %H:%M:%S)
 
+    var1=100
+    var2=var1
+    eval $var2='$(date +%Y-%m-%d\ %H:%M:%S)'
+    echo $var1
 
+    sdfsdfsdf=$1
+    eval $sdfsdfsdf='$(date +%Y-%m-%d\ %H:%M:%S)'
+}
+function test_invoke_current_time() {
+    var_datetime="before"
+    test_current_time var_datetime
+    echo $var_datetime
+}
+
+function test_get_line_no() {
+    # set -v
+    # set -x
+    # ls -la
+
+    # 显示执行命令所在行的行号
+    # set -x
+    # PS4=':${LINENO}+'
+    # ls -la
+    # ls -la
+    
+    echo "LINENO="$LINENO
+    echo "p1=$1"
+}
+function test_invoke_get_line_no() {
+    test_get_line_no $LINENO
+}
+test_invoke_get_line_no
 
 read -n1 -p "any key...."

@@ -1,4 +1,7 @@
 #!/bin/sh
+
+source ./util.sh
+
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -108,23 +111,23 @@ function log_basic_print_without_bg() {
     echo "\\033[${1};${2}m${@:3}\\033[0m"
 }
 function log_head_print() {
-    FOREGROUND=$LOG_VAR_FG_YELLOW
-    FONT=$LOG_VAR_BLINK
+    local FOREGROUND=$LOG_VAR_FG_YELLOW
+    local FONT=$LOG_VAR_BLINK
     echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_var_print() {
-    FOREGROUND=$LOG_VAR_FG_SKY_BLUE
-    FONT=$LOG_VAR_BLINK
+    local FOREGROUND=$LOG_VAR_FG_SKY_BLUE
+    local FONT=$LOG_VAR_BLINK
     echo "  \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_var_split_print() {
     # changed original content for space char
     # Multiple Spaces merge into one space.
-    FOREGROUND=$LOG_VAR_FG_SKY_BLUE
-    FONT=$LOG_VAR_BLINK
-    KEY=$(echo $@ | sed "s/\\=.*$//g")
+    local FOREGROUND=$LOG_VAR_FG_SKY_BLUE
+    local FONT=$LOG_VAR_BLINK
+    local KEY=$(echo $@ | sed "s/\\=.*$//g")
     # VALUE=$(echo $@ | sed "s/^.*\\=//g")
-    VALUE=${@#*=}
+    local VALUE=${@#*=}
     echo "  \\033[${FOREGROUND};${FONT}m${KEY} \\033[${LOG_VAR_FG_YELLOW}m= \\033[${FOREGROUND}m${VALUE}\\033[0m"
 }
 function log_debug_print() {
@@ -134,38 +137,41 @@ function log_debug_print() {
     # log_basic_print_without_bg ${LOG_VAR_FG_BLUE} ${LOG_VAR_BLINK} $@
 
     # not changed original content
-    FOREGROUND=$LOG_VAR_FG_BLUE
-    FONT=$LOG_VAR_BLINK
-    echo "    \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    local FOREGROUND=$LOG_VAR_FG_BLUE
+    local FONT=$LOG_VAR_BLINK
+    local CURRENT_DATETIME
+    util_get_current_datetime CURRENT_DATETIME
+    echo "[$CURRENT_DATETIME] \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_info_print() {
     # high | green
     # log_basic_print_without_bg ${LOG_VAR_FG_GREEN} ${LOG_VAR_BLINK} $@
-    FOREGROUND=$LOG_VAR_FG_GREEN
-    FONT=$LOG_VAR_BLINK
-    echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    local FOREGROUND=$LOG_VAR_FG_GREEN
+    local FONT=$LOG_VAR_BLINK
+    util_get_current_datetime CURRENT_DATETIME
+    echo "[$CURRENT_DATETIME] \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_warning_print() {
     # high | bold | purple
     # log_basic_print_without_bg ${LOG_VAR_FG_VIOLET} ${LOG_VAR_BOLD} $@
-    FOREGROUND=$LOG_VAR_FG_VIOLET
-    FONT=$LOG_VAR_BOLD
+    local FOREGROUND=$LOG_VAR_FG_VIOLET
+    local FONT=$LOG_VAR_BOLD
     echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_error_print() {
     # high | bold | red
     # log_basic_print_without_bg ${LOG_VAR_FG_RED} ${LOG_VAR_BOLD} $@
-    FOREGROUND=$LOG_VAR_FG_RED
-    FONT=$LOG_VAR_BOLD
+    local FOREGROUND=$LOG_VAR_FG_RED
+    local FONT=$LOG_VAR_BOLD
     echo "\\033[${FOREGROUND};${FONT}m${@}\\033[0m"
     exit 1
 }
 function log_fatal_print() {
     # high | bold | red | blink
     # log_basic_print ${LOG_VAR_BG_GREEN} ${LOG_VAR_FG_RED} ${LOG_VAR_BOLD} $@
-    FOREGROUND=$LOG_VAR_FG_RED
-    BACKGROUND=$LOG_VAR_BG_GREEN
-    FONT=$LOG_VAR_BOLD
+    local FOREGROUND=$LOG_VAR_FG_RED
+    local BACKGROUND=$LOG_VAR_BG_GREEN
+    local FONT=$LOG_VAR_BOLD
     echo "\\033[${FOREGROUND};${BACKGROUND};${FONT}m${@}\\033[0m"
 }
 function log_print() {

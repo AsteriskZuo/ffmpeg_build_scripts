@@ -1217,11 +1217,11 @@ log_head_print "################################################################
 log_head_print "#### Process control partition                                            #####"
 log_head_print "###############################################################################"
 
-# ffmpeg_clean
-# ffmpeg_mkdir
-# ffmpeg_prerequisites
-# ffmpeg_build_all
-# ffmpeg_generate_result
+ffmpeg_clean
+ffmpeg_mkdir
+ffmpeg_prerequisites
+ffmpeg_build_all
+ffmpeg_generate_result
 
 # function ffmpeg_break() {
 
