@@ -64,7 +64,10 @@ export FFMPEG_WORK_THREAD_COUNT="4"
 
 # "src" "tmp" "tool"
 export FFMPEG_ALL_CLEAN_TYPE_PREDEFINE=("src" "tmp" "tool")
-export FFMPEG_ALL_CLEAN_TYPE=("tmp")
+export FFMPEG_ALL_CLEAN_TYPE=()
+
+# enable ffmpeg external library
+export FFMPEG_ENABLE_EXTERNAL_LIBRARY="yes"
 
 export FFMPEG_NAME="ffmpeg"
 export FFMPEG_VERSION="4.2.2"
@@ -139,7 +142,7 @@ echo "##########################################################################
 echo "#### external library partition                                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export FFMPEG_ALL_BUILD_LIBRARY=(${FFMPEG_NAME})
+export FFMPEG_ALL_BUILD_LIBRARY=()
 
 # Codec library for encoding and decoding AV1 video streams
 # url: https://aomedia.googlesource.com/aom

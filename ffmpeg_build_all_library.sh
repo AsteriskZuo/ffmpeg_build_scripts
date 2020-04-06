@@ -31,6 +31,9 @@ log_head_print "# Url: https://developer.android.com/ndk/guides/abis            
 log_head_print "# Url: https://developer.android.com/ndk/guides/other_build_systems           #"
 log_head_print "# Url: https://developer.android.com/ndk/guides/standalone_toolchain          #"
 log_head_print "# Url: https://gcc.gnu.org/onlinedocs/gcc/index.html                          #"
+log_head_print "# Url: https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2. #"
+log_head_print "#   69/autoconf.html                                                          #"
+log_head_print "# Url: https://www.gnu.org/software/automake/manual/automake.html             #"
 log_head_print "# Url: https://llvm.org/docs/genindex.html                                    #"
 log_head_print "# Url: https://clang.llvm.org/                                                #"
 log_head_print "# Url: https://releases.llvm.org/10.0.0/tools/clang/docs/index.html           #"
@@ -67,6 +70,7 @@ Help options:
 
   --eael=<?>               enable all external library, detail for FFMPEG_BOOL_SET variable
   --wtc=<?>                work thread count for make commandline, detail for FFMPEG_WORK_THREAD_COUNT_SET variable
+  --eel=<?>                enable external library which is depended by ffmpeg, detail for FFMPEG_BOOL_SET variable
   --csd[=?:]               clean src directory, detail for FFMPEG_ALL_CLEAN_TYPE variable, example --csd=src:tmp:tool
 
 Parameter setting:
@@ -128,6 +132,13 @@ for opt; do
             a=1
         fi
         ;;
+    --eel=*)
+        if ffmpeg_is_in $optval ${FFMPEG_BOOL_SET[@]}; then
+            FFMPEG_ENABLE_EXTERNAL_LIBRARY=($optval)
+        else
+            a=1
+        fi
+        ;;
     --wtc=*)
         if ffmpeg_is_in $optval ${FFMPEG_WORK_THREAD_COUNT_SET[@]}; then
             FFMPEG_WORK_THREAD_COUNT=($optval)
@@ -165,6 +176,7 @@ log_head_print "################################################################
 log_var_split_print "FFMPEG_ENABLE_LOG_FILE=$FFMPEG_ENABLE_LOG_FILE"
 log_var_split_print "FFMPEG_WORK_THREAD_COUNT=$FFMPEG_WORK_THREAD_COUNT"
 log_var_split_print "FFMPEG_ALL_CLEAN_TYPE=${FFMPEG_ALL_CLEAN_TYPE[@]}"
+log_var_split_print "FFMPEG_ENABLE_EXTERNAL_LIBRARY=$FFMPEG_ENABLE_EXTERNAL_LIBRARY"
 
 log_head_print "###############################################################################"
 log_head_print "#### Variable declarations partition                                      #####"
@@ -316,7 +328,6 @@ if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_xvid_enable ]; then FFMPEG_ALL_BUILD_LIBRA
 if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_xz_enable ]; then FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_EXTERNAL_LIBRARY_xz; fi
 if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_openssl_enable ]; then FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_EXTERNAL_LIBRARY_openssl; fi
 
-FFMPEG_ALL_BUILD_LIBRARY=("x264")
 FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_NAME
 log_var_split_print "FFMPEG_ALL_BUILD_LIBRARY=${FFMPEG_ALL_BUILD_LIBRARY[@]}"
 
@@ -561,6 +572,7 @@ function ffmpeg_build_iOS() {
     local TMP_DIR="${FFMPEG_TMP_OS_XXX_TMP_DIR}/${FFMPEG_CURRENT_ARCH}"
     local OUTPUT_DIR="${FFMPEG_TMP_OS_XXX_OUTPUT_DIR}/${FFMPEG_CURRENT_ARCH}"
     local PLATFORM_TRAIT=""
+    local EXTERNAL_LIBRARY_TRAIT=""
     local DEVICE_TYPE=""
 
     local CONFIGURE_PARAMS_PREFIX=${OUTPUT_DIR}
@@ -609,10 +621,39 @@ function ffmpeg_build_iOS() {
     CONFIGURE_PARAMS_LD="$CONFIGURE_PARAMS_CC"
     CONFIGURE_PARAMS_SYSROOT=$(xcrun -sdk ${DEVICE_TYPE} --show-sdk-path)
 
+    if [ "yes" = $FFMPEG_ENABLE_EXTERNAL_LIBRARY ]; then
+
+        local lv_external_library_flags=""
+        local lv_external_library_include=""
+        local lv_external_library_lib=""
+
+        for lv_library in ${FFMPEG_ALL_BUILD_LIBRARY[@]}; do
+            if [ "x264" = $lv_library ]; then
+                local lv_lib_name="x264"
+                local lv_lib_dir="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/${lv_lib_name}/output/${FFMPEG_CURRENT_ARCH}"
+                local lv_lib_file="${lv_lib_dir}/lib/lib${lv_lib_name}.a"
+                if [ -r $lv_lib_file ]; then
+                    lv_external_library_flags="$lv_external_library_flags --enable-lib${lv_lib_name} --enable-encoder=lib${lv_lib_name} --enable-decoder=h264 --enable-gpl"
+                    lv_external_library_include="$lv_external_library_include -I${lv_lib_dir}/include"
+                    lv_external_library_lib="$lv_external_library_lib -L${lv_lib_dir}/lib"
+                fi
+            fi
+        done
+
+        log_var_split_print "lv_external_library_flags=$lv_external_library_flags"
+        log_var_split_print "lv_external_library_include=$lv_external_library_include"
+        log_var_split_print "lv_external_library_lib=$lv_external_library_lib"
+
+        EXTERNAL_LIBRARY_TRAIT="$EXTERNAL_LIBRARY_TRAIT $lv_external_library_flags"
+        CONFIGURE_PARAMS_CFLAGS="$CONFIGURE_PARAMS_CFLAGS $lv_external_library_include"
+        CONFIGURE_PARAMS_LDFLAGS="$CONFIGURE_PARAMS_LDFLAGS $lv_external_library_lib"
+    fi
+
     log_var_split_print "DEVICE_TYPE=${DEVICE_TYPE}"
     log_var_split_print "TMP_DIR=$TMP_DIR"
     log_var_split_print "OUTPUT_DIR=$OUTPUT_DIR"
     log_var_split_print "PLATFORM_TRAIT=$PLATFORM_TRAIT"
+    log_var_split_print "EXTERNAL_LIBRARY_TRAIT=$EXTERNAL_LIBRARY_TRAIT"
 
     log_var_split_print "CONFIGURE_PARAMS_PREFIX=${CONFIGURE_PARAMS_PREFIX}"
     log_var_split_print "CONFIGURE_PARAMS_SYSROOT=${CONFIGURE_PARAMS_SYSROOT}"
@@ -627,35 +668,11 @@ function ffmpeg_build_iOS() {
     log_var_split_print "CONFIGURE_PARAMS_LDFLAGS=${CONFIGURE_PARAMS_LDFLAGS}"
     log_var_split_print "CONFIGURE_PARAMS_PKG_CONFIG=${CONFIGURE_PARAMS_PKG_CONFIG}"
 
-    # Toolchain options:
-    # CONFIGURE_PARAMS="--enable-cross-compile"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --sysroot=${CONFIGURE_PARAMS_SYSROOT}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --target-os=${CONFIGURE_PARAMS_TARGET_OS}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --arch=${FFMPEG_CURRENT_ARCH}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --ar=${CONFIGURE_PARAMS_AR}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --as=${CONFIGURE_PARAMS_AS}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --cc=${CONFIGURE_PARAMS_CC}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --ld=${CONFIGURE_PARAMS_LD}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --pkg-config=${CONFIGURE_PARAMS_PKG_CONFIG}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --enable-pic"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-cflags=${CONFIGURE_PARAMS_CFLAGS}"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --extra-CONFIGURE_PARAMS_LDFLAGS=${CONFIGURE_PARAMS_LDFLAGS}"
-
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --prefix=${CONFIGURE_PARAMS_PREFIX}"
-
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --disable-debug"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --disable-programs"
-    # CONFIGURE_PARAMS="${CONFIGURE_PARAMS} --disable-doc"
-
-    # echo "CONFIGURE_PARAMS=${CONFIGURE_PARAMS}"
-
-    # sh -x "./configure" ${CONFIGURE_PARAMS}
-
     local CONFIGURE_FILE="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
 
-    log_debug_print "$CONFIGURE_FILE in progress ..."
     # read -n1 -p "Press any key to continue..."
+    log_debug_print "$CONFIGURE_FILE in progress ..."
 
     pushd .
 
@@ -669,33 +686,15 @@ function ffmpeg_build_iOS() {
         --as="${CONFIGURE_PARAMS_AS}" \
         --cc="${CONFIGURE_PARAMS_CC}" \
         --enable-pic \
+        ${PLATFORM_TRAIT} \
+        ${EXTERNAL_LIBRARY_TRAIT} \
         --extra-cflags="${CONFIGURE_PARAMS_CFLAGS}" \
         --extra-ldflags="${CONFIGURE_PARAMS_LDFLAGS}" \
-        ${PLATFORM_TRAIT} \
         --disable-debug \
         --disable-doc >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
-    # sh $CONFIGURE_FILE \
-    #     "--prefix=${CONFIGURE_PARAMS_PREFIX}" \
-    #     "--enable-cross-compile" \
-    #     "--sysroot=${CONFIGURE_PARAMS_SYSROOT}" \
-    #     "--target-os=${CONFIGURE_PARAMS_TARGET_OS}" \
-    #     "--arch=${FFMPEG_CURRENT_ARCH}" \
-    #     "--ar=${CONFIGURE_PARAMS_AR}" \
-    #     "--as=${CONFIGURE_PARAMS_AS}" \
-    #     "--cc=${CONFIGURE_PARAMS_CC}" \
-    #     "--ld=${CONFIGURE_PARAMS_LD}" \
-    #     "--pkg-config=${CONFIGURE_PARAMS_PKG_CONFIG}" \
-    #     "--enable-pic" \
-    #     "--extra-cflags=${CONFIGURE_PARAMS_CFLAGS}" \
-    #     "--extra-ldflags=${CONFIGURE_PARAMS_LDFLAGS}" \
-    #     "--disable-debug" \
-    #     "--disable-programs" \
-    #     "--disable-doc" ||
-    #     exit 1
-
-    log_debug_print "make and make install in progress ..."
     # read -n1 -p "Press any key to continue..."
+    log_debug_print "make and make install in progress ..."
 
     make clean >>${FFMPEG_LOG} 2>&1 || log_error_print "Make clean error. See log (${FFMPEG_LOG}) for details."
     make -j${FFMPEG_WORK_THREAD_COUNT} install >>${FFMPEG_LOG} 2>&1 || log_error_print "Make or install error. See log (${FFMPEG_LOG}) for details."
@@ -728,6 +727,7 @@ function ffmpeg_build_Android() {
 
     local PKG_CONFIG="$(which pkg-config)"
     local PLATFORM_TRAIT=""
+    local EXTERNAL_LIBRARY_TRAIT=""
 
     # ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")
     # ANDROID_ABIS=("armeabi-v7a" "arm64-v8a" "x86" "x86_64")
@@ -829,6 +829,34 @@ function ffmpeg_build_Android() {
     local CONFIGURE_PARAMS_TARGET_OS="android"
     local CONFIGURE_PARAMS_SYSROOT=""
 
+    if [ "yes" = $FFMPEG_ENABLE_EXTERNAL_LIBRARY ]; then
+
+        local lv_external_library_flags=""
+        local lv_external_library_include=""
+        local lv_external_library_lib=""
+
+        for lv_library in ${FFMPEG_ALL_BUILD_LIBRARY[@]}; do
+            if [ "x264" = $lv_library ]; then
+                local lv_lib_name="x264"
+                local lv_lib_dir="${FFMPEG_TMP_DIR}/${FFMPEG_CURRENT_TARGET_OS}/${lv_lib_name}/output/${FFMPEG_CURRENT_ARCH}"
+                local lv_lib_file="${lv_lib_dir}/lib/lib${lv_lib_name}.a"
+                if [ -r $lv_lib_file ]; then
+                    lv_external_library_flags="$lv_external_library_flags --enable-lib${lv_lib_name} --enable-encoder=lib${lv_lib_name} --enable-decoder=h264 --enable-gpl"
+                    lv_external_library_include="$lv_external_library_include -I${lv_lib_dir}/include"
+                    lv_external_library_lib="$lv_external_library_lib -L${lv_lib_dir}/lib"
+                fi
+            fi
+        done
+
+        log_var_split_print "lv_external_library_flags=$lv_external_library_flags"
+        log_var_split_print "lv_external_library_include=$lv_external_library_include"
+        log_var_split_print "lv_external_library_lib=$lv_external_library_lib"
+
+        EXTERNAL_LIBRARY_TRAIT="$EXTERNAL_LIBRARY_TRAIT $lv_external_library_flags"
+        CONFIGURE_PARAMS_CFLAGS="$CONFIGURE_PARAMS_CFLAGS $lv_external_library_include"
+        CONFIGURE_PARAMS_LDFLAGS="$CONFIGURE_PARAMS_LDFLAGS $lv_external_library_lib"
+    fi
+
     log_var_split_print "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
     log_var_split_print "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
 
@@ -861,6 +889,7 @@ function ffmpeg_build_Android() {
 
     log_var_split_print "PKG_CONFIG=$PKG_CONFIG"
     log_var_split_print "PLATFORM_TRAIT=${PLATFORM_TRAIT}"
+    log_var_split_print "EXTERNAL_LIBRARY_TRAIT=$EXTERNAL_LIBRARY_TRAIT"
 
     local CONFIGURE_FILE="${FFMPEG_TMP_OS_XXX_SRC_DIR}/${FFMPEG_FULL_NAME}/configure"
     log_var_split_print "CONFIGURE_FILE=$CONFIGURE_FILE"
@@ -884,27 +913,11 @@ function ffmpeg_build_Android() {
         --enable-thumb \
         --enable-pic \
         ${PLATFORM_TRAIT} \
+        ${EXTERNAL_LIBRARY_TRAIT} \
         --pkg-config="${PKG_CONFIG}" \
         --extra-cflags="${CFLAGS}" \
         --extra-cxxflags="${CXXFLAGS}" \
         --extra-ldflags="${LDFLAGS}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
-
-    # sh $CONFIGURE_FILE \
-    #     --prefix="${CONFIGURE_PARAMS_PREFIX}" \
-    #     --enable-cross-compile \
-    #     --target-os=android \
-    #     --arch=arm \
-    #     --cc="${CC}" \
-    #     --cxx="${CXX}" \
-    #     --disable-debug \
-    #     --enable-shared \
-    #     --enable-neon \
-    #     --enable-thumb \
-    #     --enable-pic \
-    #     --pkg-config="/usr/local/bin/pkg-config" \
-    #     --extra-cflags="-march=armv7-a -mcpu=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb -mfpu=neon -O3 -Wall -pipe -std=c11 -ffast-math -fstrict-aliasing -Werror=strict-aliasing -Wa,--noexecstack -DANDROID -DNDEBUG " \
-    #     --extra-cxxflags="${CXXFLAGS}" \
-    #     --extra-ldflags="-Wl,--fix-cortex-a8" || exit 1
 
     # read -n1 -p "Press any key to continue..."
     log_debug_print "make and make install in progress ..."

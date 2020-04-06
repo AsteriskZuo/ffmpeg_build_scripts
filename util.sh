@@ -20,7 +20,17 @@ function util_print_current_datetime() {
     echo $(date +%Y-%m-%d\ %H:%M:%S)
 }
 function util_get_current_datetime() {
-    local var=$1
-    eval $var='$(date +%Y-%m-%d\ %H:%M:%S)'
+    local lv_var=$1
+    eval $lv_var='$(date +%Y-%m-%d\ %H:%M:%S)'
+}
+function util_dir_is_empty() {
+    local lv_dir=$1
+    local lv_result=$2
+    local lv_file_list=(`ls $lv_dir`)
+    if [ 0 -lt ${#lv_file_list[@]} ]; then
+        eval $lv_result="no"
+    else
+        eval $lv_result="yes"
+    fi
 }
 

@@ -33,6 +33,10 @@ echo "##########################################################################
 echo "#### Function test partition                                              #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
+echo "The GNU Build System:"
+echo "Autoconf solves an important problem—reliable discovery of system-specific build and runtime information—but this is only one piece of the puzzle for the development of portable software. To this end, the GNU project has developed a suite of integrated utilities to finish the job Autoconf started: the GNU build system, whose most important components are Autoconf, Automake, and Libtool. In this chapter, we introduce you to those tools, point you to sources of more information, and try to convince you to use the entire GNU build system for your software."
+echo "ref: https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/autoconf.html#Preset-Output-Variables"
+
 function log_test2() {
     log_basic_print ${LOG_VAR_BG_GREEN} ${LOG_VAR_FG_RED} ${LOG_VAR_BLINK} "log test content"
     log_basic_print ${LOG_VAR_BG_BLACK} ${LOG_VAR_FG_RED} ${LOG_VAR_BLINK} "log test content"
@@ -515,13 +519,26 @@ function test_get_line_no() {
     # PS4=':${LINENO}+'
     # ls -la
     # ls -la
-    
+
     echo "LINENO="$LINENO
     echo "p1=$1"
 }
 function test_invoke_get_line_no() {
     test_get_line_no $LINENO
 }
-test_invoke_get_line_no
+
+function test_dir_is_empty() {
+    lssssss=(`ls /Users/asteriskzuo/_github/ffmpeg_build_scripts/ffmpeg_test`)
+    echo "lssssss=${lssssss[@]}"
+    if [ 0 -lt ${#lssssss[@]} ]; then
+        echo "exist"
+    else
+        echo "not exist"
+    fi
+}
+function test_invoke_dir_is_empty() {
+    test_dir_is_empty
+}
+
 
 read -n1 -p "any key...."
