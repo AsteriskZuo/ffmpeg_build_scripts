@@ -163,9 +163,9 @@ export FFMPEG_EXTERNAL_LIBRARY_frei0r_url=""
 # url: https://lame.sourceforge.io/
 # advise: yes
 export FFMPEG_EXTERNAL_LIBRARY_lame="lame"
-export FFMPEG_EXTERNAL_LIBRARY_lame_enable="no"
+export FFMPEG_EXTERNAL_LIBRARY_lame_enable="yes"
 export FFMPEG_EXTERNAL_LIBRARY_lame_version="3.100"
-export FFMPEG_EXTERNAL_LIBRARY_lame_url=""
+export FFMPEG_EXTERNAL_LIBRARY_lame_url="https://jaist.dl.sourceforge.net/project/lame/lame/${FFMPEG_EXTERNAL_LIBRARY_lame}/${FFMPEG_EXTERNAL_LIBRARY_lame}-${FFMPEG_EXTERNAL_LIBRARY_lame_version}.tar.gz"
 
 # Subtitle renderer for the ASS/SSA subtitle format
 # url: https://github.com/libass/libass

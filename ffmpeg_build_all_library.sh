@@ -25,21 +25,9 @@ log_head_print "# curl for iOS and Android, which can be installed using brew   
 log_head_print "# tar for iOS and Android, which can be installed using brew                  #"
 log_head_print "#                                                                             #"
 log_head_print "# Reference:                                                                  #"
-log_head_print "# Url: http://yasm.tortall.net/                                               #"
-log_head_print "# Url: https://developer.android.com/ndk/guides/cmake                         #"
-log_head_print "# Url: https://developer.android.com/ndk/guides/abis                          #"
-log_head_print "# Url: https://developer.android.com/ndk/guides/other_build_systems           #"
-log_head_print "# Url: https://developer.android.com/ndk/guides/standalone_toolchain          #"
-log_head_print "# Url: https://gcc.gnu.org/onlinedocs/gcc/index.html                          #"
-log_head_print "# Url: https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2. #"
-log_head_print "#   69/autoconf.html                                                          #"
-log_head_print "# Url: https://www.gnu.org/software/automake/manual/automake.html             #"
-log_head_print "# Url: https://llvm.org/docs/genindex.html                                    #"
+log_head_print "# Url: https://developer.android.com/                                         #"
+log_head_print "# Url: https://gcc.gnu.org/                                                   #"
 log_head_print "# Url: https://clang.llvm.org/                                                #"
-log_head_print "# Url: https://releases.llvm.org/10.0.0/tools/clang/docs/index.html           #"
-log_head_print "# Url: https://github.com/libav/gas-preprocessor                              #"
-log_head_print "# Url: https://github.com/nldzsz/ffmpeg-build-scripts                         #"
-log_head_print "# Url: https://github.com/kewlbear/FFmpeg-iOS-build-script                    #"
 log_head_print "###############################################################################"
 
 echo "###############################################################################" >/dev/null
@@ -93,6 +81,10 @@ opt_count=$#
 opt=$*
 # log_var_print "opt=$opt"
 # log_var_print "opt_count=$opt_count"
+
+if [ "Darwin" != $(uname -s) ]; then
+    log_error_print "This is not MacOS."
+fi
 
 if [ ! $opt ]; then
     show_help
@@ -329,6 +321,7 @@ if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_xz_enable ]; then FFMPEG_ALL_BUILD_LIBRARY
 if [ "yes" = $FFMPEG_EXTERNAL_LIBRARY_openssl_enable ]; then FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_EXTERNAL_LIBRARY_openssl; fi
 
 FFMPEG_ALL_BUILD_LIBRARY[${#FFMPEG_ALL_BUILD_LIBRARY[@]}]=$FFMPEG_NAME
+FFMPEG_ALL_BUILD_LIBRARY=("lame")
 log_var_split_print "FFMPEG_ALL_BUILD_LIBRARY=${FFMPEG_ALL_BUILD_LIBRARY[@]}"
 
 read -n1 -p "Confirm parameters, press any key to continue, otherwise CTRL + C terminates..."

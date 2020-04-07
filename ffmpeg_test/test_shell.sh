@@ -528,7 +528,7 @@ function test_invoke_get_line_no() {
 }
 
 function test_dir_is_empty() {
-    lssssss=(`ls /Users/asteriskzuo/_github/ffmpeg_build_scripts/ffmpeg_test`)
+    lssssss=($(ls /Users/asteriskzuo/_github/ffmpeg_build_scripts/ffmpeg_test))
     echo "lssssss=${lssssss[@]}"
     if [ 0 -lt ${#lssssss[@]} ]; then
         echo "exist"
@@ -540,5 +540,15 @@ function test_invoke_dir_is_empty() {
     test_dir_is_empty
 }
 
+function test_if_continue() {
+    if [ 0 -lt 1 ]; then
+        # echo "if before"
+        continue
+        # echo "if after"
+    else
+        echo "else"
+    fi
+}
+test_if_continue
 
 read -n1 -p "any key...."
