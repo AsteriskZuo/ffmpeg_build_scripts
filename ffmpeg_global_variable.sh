@@ -111,7 +111,7 @@ echo "##########################################################################
 echo "#### Variable declarations partition on Android                           #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export ANDROID_NDK_DIR="/Users/asteriskzuo/Library/Android/sdk/ndk-bundle"
+export ANDROID_NDK_DIR="/Users/zuoyu/Library/Android/sdk/ndk-bundle"
 export ANDROID_HOST_TAG="darwin-x86_64"
 export ANDROID_TOOLCHAIN_DIR="$ANDROID_NDK_DIR/toolchains/llvm/prebuilt/$ANDROID_HOST_TAG"
 export ANDROID_MARCHS=("arm" "arm64" "x86" "x86_64")

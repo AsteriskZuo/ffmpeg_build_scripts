@@ -498,7 +498,7 @@ function ffmpeg_prerequisites_common() {
     fi
 
     if [ ! $(which tar) ]; then
-        log_error_print "Pkg-config not found."
+        log_error_print "tar not found."
     fi
 
     if [ ! $(which brew) ]; then
@@ -511,6 +511,11 @@ function ffmpeg_prerequisites_common() {
     if [ ! $(which pkg-config) ]; then
         log_warning_print "Pkg-config not found. Trying to install..."
         brew install pkg-config || log_error_print "Pkg-config install fail."
+    fi
+
+    if [ ! $(which dmalloc) ]; then
+        log_warning_print "dmalloc not found. Trying to install..."
+        brew install dmalloc || log_error_print "dmalloc install fail."
     fi
 
     log_info_print "ffmpeg_prerequisites_common end..."

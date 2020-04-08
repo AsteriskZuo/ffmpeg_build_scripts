@@ -84,7 +84,8 @@ function ffm_lib_prerequisites_lame() {
         pushd .
         cd /usr/local/opt/ncurses/bin
         local lv_file_name=($(ls | grep "ncurses"))
-        ln -f -s ${lv_file_name[0]} ncurses
+        log_var_split_print "lv_file_name=${lv_file_name[@]}"
+        ln -f -s "${lv_file_name[0]}" "ncurses"
         popd
 
         # ref: https://stackoverflow.com/questions/56784894/macos-catalina-10-15beta-why-is-bash-profile-not-sourced-by-my-shell
@@ -92,7 +93,7 @@ function ffm_lib_prerequisites_lame() {
         local lv_profile_name=""
         local lv_os_version=($(uname -r | sed "s/\./ /g"))
         if [ 18 -lt ${lv_os_version[0]} ]; then
-            lv_profile_name=".zprofile"
+            lv_profile_name=".zshrc"
         else
             lv_profile_name=".bash_profile"
         fi
@@ -225,19 +226,10 @@ function ffm_lib_build_lame_ios() {
 
     cd ${lv_tmp_dir}
 
-    # xcrun -sdk iphoneos clang -arch armv7 -std=c11 -mios-version-min=8.0 -fembed-bitcode
-    export CC="xcrun -sdk ${lv_device_type} clang -arch armv7 -std=c11 -mios-version-min=8.0 -fembed-bitcode"
-    export CXX="xcrun -sdk ${lv_device_type} clang++ -arch armv7 -std=c++11 -mios-version-min=8.0 -fembed-bitcode"
-    # export CC="xcrun -sdk ${lv_device_type} clang"
-    # export CXX="xcrun -sdk ${lv_device_type} clang++"
-    # export CPP="$CC"
+    export CC="$lv_cc $lv_cflags"
+    export CXX="$lv_cxx $lv_cxxflags"
     export AR=$lv_ar
-    # export AS=$CC
     export LD=$CC
-    export CFLAGS="-arch armv7 -std=c11 -mios-version-min=8.0 -fembed-bitcode"
-    export CXXFLAGS="-arch armv7 -std=c++11 -mios-version-min=8.0 -fembed-bitcode"
-    export LDFLAGS=$CFLAGS
-    # export AR_FLAGS="-cru"
 
     sh $lv_configure_file \
         --prefix=${lv_prefix} \
@@ -266,8 +258,9 @@ function ffm_lib_build_lame_android() {
     local lv_prefix=$lv_output_dir
     local lv_extra_asflags=""
     local lv_cflags="-arch ${FFMPEG_CURRENT_ARCH} -std=c11"
+    local lv_cxxflags="-arch ${FFMPEG_CURRENT_ARCH} -std=c++11"
     local lv_ldflags=""
-    local lv_other_options="--disable-cli --enable-static --enable-shared --enable-lto --enable-strip --enable-pic"
+    local lv_other_options="--enable-static=yes --enable-shared=yes --enable-mp3x --enable-mp3rtp"
     local lv_host=""
 
     # common variable
@@ -373,9 +366,8 @@ function ffm_lib_build_lame_android() {
         export RANLIB=${ANDROID_CURRENT_TOOLCHAIN_DIR}/bin/${CURRENT_TRIPLE_armv7a}-ranlib
     fi
 
-    export AS=$CC
-    # export LD=$CC
-    # export -n AS
+    export CC="$CC $CFLAGS"
+    export CXX="$CXX $CXXFLAGS"
 
     log_var_split_print "CURRENT_ARCH_FLAGS=$CURRENT_ARCH_FLAGS"
     log_var_split_print "CURRENT_ARCH_LINK=$CURRENT_ARCH_LINK"
@@ -429,10 +421,7 @@ function ffm_lib_build_lame_android() {
     sh $lv_configure_file \
         --prefix=${lv_prefix} \
         --host=${lv_host} \
-        ${lv_other_options} \
-        --extra-cflags="${lv_cflags}" \
-        --extra-asflags="${lv_extra_asflags}" \
-        --extra-ldflags="${lv_ldflags}" >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
+        ${lv_other_options} >${FFMPEG_LOG} 2>&1 || log_error_print "Configuration error. See log (${FFMPEG_LOG}) for details."
 
     log_debug_print "make and make install in progress ..."
     # read -n1 -p "Press any key to continue..."
